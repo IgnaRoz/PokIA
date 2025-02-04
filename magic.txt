@@ -1,0 +1,59 @@
+//Declaracion de grupos o predicados simples 
+
+
+mano(carta:x,jugador:y); // x es una carta de la mano del jugador y. Se puede especificar o no, lo que haria que admitiera cualquier tipo de individuo
+campo(x,y); // x es una carta del jugador y en su campo de juego
+turno(x); // X es el jugador que tiene el turno
+//Declaraciones de predicados definido por el usuario
+
+
+
+
+//Declaracion de categorias
+
+
+carta; // 
+tierra:carta;
+monstruo:carta{ // monstruo es tambian una carta
+    //atributos de categoria, todos los individuos deben de especificarlos
+    int vida; //quizas en el futuro incluir rango de valores(para predicciones) 
+    // o indicar que es un atributo ocultable con alguna condicion para indicar que el jugador no puede ver que tipos de cartas tiene el rival(pero si que son cartas)
+    int ataque;
+    int tierras; //numero de tierras necesarias para sacar al campo al monstruo
+
+    
+},
+jugador{
+    int vida;
+
+} [Jugador1, Jugador2]; // definimos unos elementos iniciales con nombres
+
+
+
+
+//acciones
+
+
+accion atacar(x,y){// la x y la y podrian ser innecesarias aqui, se pueden obtenter segun aparezcan en condicion
+    Condicion: carta(x) AND monstruo(x) AND NOT girado(x) AND jugador(j1) AND campo(x,j1)
+        AND carta(y) AND monstruo(x) AND jugador(j2) AND campo(y,j2) AND j1!=j2 
+        AND turno(j1);
+    Consecuencias: girado(x), bajarVida(x,y);
+};
+accion invocar(x){
+
+}
+
+accion terminarTurno(){ //Termina el turno del jugador que tenga el turno y le da paso al siguitente jugador
+    Condicion: turno(Jugador1);   
+
+    Consecuencias: ! turno(Jugador1) , turno(Jugador2);
+
+    //alternativa, una accion puede tener una accion alternativa con distintas condiciones y/o consecuencias.
+    // las consencuencias se puede omitir cuando le siga otra alternativa con consecuencia definida
+    Condicion: turno(Jugador2); //¿Se podra usar precondicion o poscondicion para modificar la condicion original si sustituir?
+    Consecuencias: ! turno(Jugador2) , turno(Jugador1); // Existiran tambien preconsecuencias y postconsecuencias?
+}
+
+//Consecuencias
+consecuencia bajarVida(x,y){} // acciones o censecuencias vacias estan pensadas para ir acompañadas de excepciones

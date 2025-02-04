@@ -1,0 +1,47 @@
+
+turno_actual(jugador:x); // x es el jugador que tiene el turno 
+rival(jugador:x,jugador:y); // x es el jugador rival de y
+
+mano(carta:x,jugador:y); // x es una carta de la mano del jugador y. Se puede especificar o no, lo que haria que admitiera cualquier tipo de individuo
+mano_numero(numero:x,jugador:y); // x es el numero de cartas en la mano del jugador y
+
+banco(carta:x,jugador:y); // x es una carta del jugador y en su banco de juego
+banco_numero(numero:x,jugador:y); // x es el numero de cartas en el banco del jugador y
+
+activo(pokemon:x,jugador:y); // x es el pokemon activo del jugador y
+
+campo(pokemon:x,jugador:y)= banco(x,y) OR activo(x,y) ; // x es un pokemon del jugador, ya sea activo o en el banco
+
+
+tipo_energia(energia:x,jugador:y); // x es el tipo de energia del jugador y
+energia_pokemon(pokemon:x,energia:y, int: z); // x es un pokemon que tiene z energias del tipo y
+
+uso_partidario(bool:x) // x es un booleano que indica si se ha usado un partidario en el turno del jugador actual
+uso_energia(bool:x) // x es un booleano que indica si se ha usado una energia en el turno del jugador actual
+
+
+////////////  CATEGORIAS  /////////////////////////////////////////////////
+
+carta{}; //
+
+pokemon:carta(
+    int vida,
+    energia tipo,
+    debilidad tipo,
+    ataques[] ataque
+    
+)
+ataque(//ataque basico
+    int ataque,
+    Condicion condiciones
+)
+
+partidario:carta; // cartas del tipo partidario(solo se pueden jugar una vez por turno)
+
+objeto:carta; // cartas del tipo objeto(se pueden jugar tantas como quieran por turno)
+
+energia[fuego,agua,planta,rayo,psiquico,acero,roca,normal,veneno,dragon,oscuro]; // categorias de cartas de energia
+
+jugador{
+    int puntos // Internamente seria jugador_puntos(x:jugador,y:puntos); 
+} [Jugador1, Jugador2]; 

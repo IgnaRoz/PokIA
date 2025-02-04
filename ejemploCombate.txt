@@ -1,0 +1,124 @@
+####### Estado Inicial ##########
+pokemon Pikachu{
+    vida = 100;
+    energia = rayo;
+    debilidad = tierra;
+
+}
+//accion BASE atacar(){ //y es el ataque que se usa
+//    Fase: normal; // Fase en la que se puede ejecutar la accion
+//    Condicion: activo(x,z) AND turno_actual(z)  AND rival(r,z) AND activo(p,z) ; 
+//    Consecuencias:
+//
+//      x = pokemon que ataca
+//      z = jugador que tiene el turno
+//      r = jugador rival
+//      p = pokemon que recibe el ataque
+//};
+accion impactrueno:atacar(){
+    Condicion: energia_pokemon(x,rayo,1);
+    Consecuencias: bajar_vida(p,100);
+}
+accion trueno:atacar(){
+    Condicion: energia_pokemon(x,rayo,2);
+    Consecuencias: bajar_vida(p,50);
+}
+
+pokemon Squirtle{
+    vida = 100;
+    energia = agua;
+    debilidad = planta;
+
+}
+accion pistola_agua:atacar(y){
+    Condicion: energia_pokemon(x,agua,1);
+    Consecuencias: bajar_vida(p,30);
+
+}
+
+pokemon Ratata{
+    vida = 100;
+    energia = normal;
+    debilidad = lucha;
+
+}
+accion placaje:atacar(y){
+    Condicion: energia_pokemon_normal(x,1);// Cualquier energia cuenta tambien como normal
+    Consecuencias: bajar_vida(p,20);
+
+}
+jugador1 = new jugador(0);
+jugador2 = new jugador(0);
+
+tipo_energia(electrico,Jugador1);
+tipo_energia(agua,Jugador2);
+
+mano(new Ratata,Jugador1);
+
+mano(new Ratata,Jugador2);
+
+activo(new Pikachu,Jugador1);
+activo(new Squirtle,Jugador2);
+banco(new Ratata,Jugador1);// este ratata es diferente al de la mano
+
+turno_actual(Jugador1);
+
+
+
+####### turno 1 - Inicio ##########
+
+## Acciones disponibles ##
+//turno_actual(jugador1);
+sacar_pokemon_banco(Ratata,Jugador1); // Ratata solo es el nombre de la clase, luego se usara un identificador unico por lo que podria haber dos sacar_pokemon_banco(Ratata,Jugador1) en el mismo turno pero cada uno hace referencia a un objeto distinto
+
+dar_energia(Pikachu);
+//aun no puede atacar 
+
+####### turno 1 - accion dar_energia(Pikachu) ##########
+
+## estado actual ##
+uso_energia(true);//energia ya usada
+energia_pokemon(Pikachu,rayo,1);//Pikachu tiene una energia de tipo rayo
+
+## Acciones disponibles ##
+sacar_pokemon_banco(Ratata,Jugador1); 
+
+impactrueno();//No tiene parametros porque no hay parametros que se puedan cambiar en el momento de la ejecucion. Si esta activa significa que el pikachu del jugador con turno puede ejecutar un ataque de impactrueno al pokemon del jugador rival en activo.
+
+####### turno 1 - accion sacar_pokemon_banco(Ratata,Jugador1) ##########
+
+## estado actual ## 
+
+uso_energia(true);//energia ya usada
+energia_pokemon(Pikachu,rayo,1);//Pikachu tiene una energia de tipo rayo
+
+banco(Ratata,Jugador1);
+
+## Acciones disponibles ##
+
+impactrueno();
+retirar_pokemon_activo();
+
+####### turno 1 - impactrueno() - FASE Cambio ##########
+
+## estado actual ##
+turno_actual(Jugador2);
+NOT activo(x,Jugador2); // no hay un pokemon x del jugador2(el impactureno lo mato)
+jugador_puntos(Jugador1,1);// Jugador1 ha ganado un punto
+banco(Ratata,Jugador2);//El jugador2 tiene un ratata en el banco
+
+
+## Acciones disponibles ##
+seleccionar_pokemon_banco(Ratata,Jugador2);
+
+
+####### turno 1 - seleccionar_pokemon_banco(Ratata,Jugador2) / impactrueno()  - FASE Normal ##########
+
+//Despues de que el rival haya seleccionado un pokemon de su banca para sustituir al pokemon activo, se vuelve al turno del jugador1 y termina de ejecutar el impactrueno
+
+## estado actual ##
+turno_actual(Jugador1);
+activo(Ratata,Jugador2);
+Not banco(Ratata,Jugador2);
+
+//Despues de terminar de ejecutar el impactrueno se termina el turno del jugador 1 y no puede hacer mas acciones

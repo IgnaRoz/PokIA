@@ -1,0 +1,62 @@
+1) Proposiciones simples
+
+[sinble]nombreProposicion([[single] [Tipo:]nombreIndividuo,...]);
+
+
+Sirve para definir informaicion sobre un individuo. Ej: turno_actual(jugador1) indica que el jugador 1 es el que tiene el turno actualmente.
+
+Cuando hay varios elementos, indica alguna relacion entre ellos. Ej: rival(jugador1,jugador2) indica que el jugador 1 tiene como rival al jugador 2.
+
+El atributo single indica que solo puede haber un unico conjunto de individuo para el(o los valores) single y el resto de valores de la proposicion. Ej: turno_actual(single Jugador:jugador) indica que solo puede haber un jugador con el turno actual. 
+activo(single Pokemon:pokemon,Jugador:jugador) indica que solo puede haber un pokemon activo para el jugador 1, el jugador 2 podria tener otro pokemon.
+
+Cuando el atributo single esta al principio, indica que todos los parametros son del tipo single.
+
+El tipo es optativo, pero si esta presente solo podra aceptar individuos de ese tipo. Ej: turno_actual(jugador1) solo acepta jugadores.
+
+##Programacion
+Internamente es un conjunto de elementos que no acepta repeticiones(conjuntos).
+Cuando se accede con un individuo concreto(Ej: turno_actual(jugador1)), se devuelve un booleano que indica si el individuo esta en el conjunto o no.
+Cuando uno o mas parametros son una variable(Ej: turno_actual(jugador)), se devuelve un conjunto con los individuos que cumplen la condicion. Dentro de una accion ese conjunto se guardara en la variable dada? si hay varios parametros como en campo(pokemon1,jugador1), se debera guardar un conjunto de pares de individuos? ya que no se puede guardar por separado en cada variable?.
+
+2) Proposiciones compuestas
+
+DEFINE nombreProposicion([[single] [Tipo:]nombreIndividuo,...])= CONDICION;
+
+Se definen igual que las simples pero van acompañadas de una condicion y son solo de lectura, no se pueden modificar. En la practica es como una macro que se usa para simplificar las condiciones en las acciones.
+
+Ej: campo(pokemon1,jugador1)= banco(pokemon1,jugador1) OR activo(pokemon1,jugador1); indica que el pokemon 1 es un pokemon del jugador 1, ya sea activo o en el banco.
+
+
+3) Tipos(Categorias)
+Por defecto se definen los tipos:Int, Boolean.
+
+Type nombreTipo[:Tipo padre]{[[list]tipo nombreAtributo [=Valor por defecto], ...]}[nombreIndividuo1[Inicializacion de valores], nombreIndividuo2,...];
+
+Se usan igual que las proposiciones simples y definen a un individuo. Permiten definir atributos para los individuos de ese tipo y herencia de tipos.
+
+Cuanndo se crea un tipo, tambien se crea una proposicion simple con el mismo nombre que el tipo y con un solo parametro. Ej: Pokemon(pokemon1) indica que el pokemon1 es un pokemon.
+
+Tambien se crea una nueva proposicion por cada atributo del tipo de la forma single nombreTipo_nombreAtributo(pokemon1,valor) que indica que el pokemon1 tiene el valor en el atributo nombreAtributo.
+Una forma simplificada para acceder a los atributos, es el nombre del individuo seguido de un punto y el nombre del atributo. Ej: pokemon1.vida indica la vida del pokemon1.
+
+Se puede inicializar una lista de individuos despues de la definicion del tipo. Ej: [pokemon1, pokemon2, pokemon3] indica que hay 3 pokemons.
+
+Los tipos aceptan herencia, por lo que se puede acceder a los atributos de los tipos padres de la misma manera y cuando un elemento es instanciado se agrega tanto a la proposicion del tipo como a las de los tipos padres. Ej: Pokemon(pokemon1) tambien agrega a Pokemon(pokemon1) y a Carta(pokemon1).
+
+
+4) Acciones
+
+accion [BASE] nombreAccion([Tipo:]nombreParametro1,...)[:nombreAccionBase]{
+    Fase: nombreFase;
+    Condiciones: condicion1; condicion2; ...;
+    Consecuencias: consecuencia1; consecuencia2; ...;
+}
+
+Las acciones es la forma en la que el usuario puede interactuar con el sistema. Segun el estado del sistema, habra una lista de acciones disponibles que el usuario podra ejecutar. Para que una accion este disponible se deberan cumplir todas las condiciones de la accion y cuando se ejecute, se ejecutaran todas las consecuencias de forma secuencial a no ser que se tope con un WAIT, en cuyo paso se pedira otra accion a ejecutar y despues de efectuar las consecuencias, se seguira con las consecuencias de la accion previa justo por donde lo dejo tras el WAIT.
+
+Las acciones pueden heredar de otra accion, en cuyo caso tambien se deberan cumplir las condiciones de la accion base y/o de las consecuencias si las hay, las cuales se ejecutaran antes que las de la accion hija.
+
+El atributo Fase, es experimental y podria desaparecer en versiones futuras. Internamente no hay diferencia entre un atributo Fase y una condicion normal en base a alguna proposicion simple como fase(nombreFase).
+
+4.1) Condiciones

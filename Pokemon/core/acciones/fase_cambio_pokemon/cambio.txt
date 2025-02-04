@@ -1,0 +1,23 @@
+accion seleccionar_pokemon_banco(pokemon:pokemon){
+    Fase: cambio_pokemon_activo;
+    Condicion: 
+        turno_actual(jugador) 
+        banco(pokemon,jugador);
+    Consecuencias: 
+        intercambio_pokemon(pokemon);  
+        fase(normal); 
+}
+
+consecuencia intercambio_pokemon(pokemon:pokemon){
+    Consecuencias: 
+        activo(pokemon,jugador) 
+        DEL banco(pokemon,jugador);
+}
+
+contingencia intercambio_pokemon_activo: intercambio_pokemon(pokemon:pokemon){
+    Condicion: //Por defecto son precondiciones
+        activo(pokemon_activo,jugador);
+    Consecuencias: //Por defecto son precondiciones
+        banco(pokemon_activo,jugador) 
+        DEL activo(pokemon_activo,jugador);
+}

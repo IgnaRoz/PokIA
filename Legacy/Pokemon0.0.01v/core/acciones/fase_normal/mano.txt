@@ -1,0 +1,18 @@
+accion BASE sacar_carta(x,y){// x es la carta e y el jugador
+    Condicion: mano(x,y) AND turno_actual(y); // x debe estar en la mano del jugador y y debe ser el jugador que tiene el turno
+    Consecuencias: NOT mano(x,y); // x desaparece de la mano
+};
+
+
+accion sacar_pokemon_banco(x,y):sacar_carta{// x es un pokemon e y el jugador. Se basa en la accion sacar_carta
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: banco(z<3,y); // z es el numero de pokemons en el banco del jugador y, si hay menos de 3 cartas en el banco, se puede ejecutar
+    Consecuencias: banco(x,y) AND (NOT mano(x,y)); // x es la nueva carta del banco del jugador y. Como hereda de sacar_carta, x desaparece de la mano
+};
+
+accion sacar_carta_partidario(x,y):sacar_carta{// x es un partidario e y el jugador. Se basa en la accion sacar_carta
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: partidario(x) AND uso_partidario(false); // x debe ser un partidario y no se debe haber usado un partidario en el turno
+    Consecuencias: NOT uso_partidario(false) AND uso_partidario(true); // Se ha usado un partidario en el turno
+};
+

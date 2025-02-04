@@ -1,0 +1,49 @@
+accion BASE atacar(){ 
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: activo(x,y) AND turno_actual(z)  AND rival(r,y) AND activo(p,y) ; 
+    Consecuencias:NOT turno_actual(z) AND turno_actual(r);
+};
+
+
+
+accion dar_energia(x)// x es al pokemon al que se le da la energia
+{
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: pokemon(x) AND turno_actual(y) AND tipo_energia(z,y) AND uso_energia(false) AND campo(x,y); // x debe ser un pokemon, y es el jugador que tiene el turno, z es el tipo de energia del jugador y, no se debe haber usado una energia en el turno y x debe estar en el campo del jugador y
+
+    Consecuencias: uso_energia(true) AND  energia_pokemon(x,z,++) AND energia_pokemon_normal(x,++); // Se ha usado una energia en el turno y el pokemon x ha recibido una energia del tipo z, que tambien cuenta como normal
+};
+
+//Suponemos de momento que no hay coste de retirar
+accion retirar_pokemon_activo(x)// x es el pokemon de la banca que sustituye al pokemon activo
+{
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: turno_actual(y) AND banco(x,y) AND activo(z,y); // x es un pokemon de la banca del jugador y y es el pokemon activo del jugador y
+    Consecuencias: activo(x,y) AND NOT activo(z,y); AND banca(z,y) AND NOT banca(x,y)// x es el nuevo pokemon activo del jugador y, z es el pokemon activo anterior, x es el nuevo pokemon activo y z es el nuevo pokemon de la banca
+};
+
+///////////  CONSECUENCIAS  /////////////////////////////////////////////////
+
+consecuencia bajar_vida(x,y){ // x es el pokemon que recibe el ataque e y es el ataque que recibe
+    Consecuencias: x.vida = x.vida - y; // se baja la vida del pokemon x un numero igual a y
+} 
+
+
+
+///////////  CONTINGENCIAS  /////////////////////////////////////////////////
+
+//Se podria hacer una contingencia muerte_pokemon y luego hacer las Contingencias muerte_pokemon_activo y muerte_pokemon_banco como contingencias de una contingencia???
+
+contingencia muerte_pokemon_activo: bajar_vida(x,y){ 
+    Condicion: activo(x,j) AND x.vida <= 0;
+    Consecuencias: NOT activo(x,j) AND jugador_rival(j).puntos++ AND NOT turno_actual(jugador) AND turno_actual(j) fase(cambio_pokemon_activo) AND WAIT AND turno_actual(jugador) AND NOT turno_actual(j); // Cambia el turno, empieza la fase de cambio para el jugador rival y se espera a que el jugador cambie de pokemon para volver a cambiar el turno
+}
+contingencia muerte_pokemon_banco: bajar_vida(x,y){
+    Condicion: banco(x,j) AND x.vida <= 0;
+    Consecuencias: NOT banco(x,j) AND jugador_rival(j).puntos++;
+}
+
+contingencia muerte_sin_pokemon: muerte_pokemon_activo{
+    Condicion: banco_numero(0,y);
+    Consecuencias: fase(fin_partida);
+}

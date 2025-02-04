@@ -1,0 +1,25 @@
+accion BASE sacar_carta(carta,jugador){
+    Condicion: 
+        mano(carta,jugador); 
+        turno_actual(jugador); 
+    Consecuencias: 
+        DEL mano(carta,jugador);
+};
+
+accion sacar_pokemon_banco(pokemon,jugador):sacar_carta{
+    Fase: normal; 
+    Condicion: 
+        banco_numero(x,jugador); 
+        x<3; 
+    Consecuencias: 
+        banco(pokemon,jugador) 
+};
+
+accion sacar_carta_partidario(partidario,jugador):sacar_carta{
+    Fase: normal; 
+    Condicion: 
+        partidario(partidario); 
+        uso_partidario(false); 
+    Consecuencias: 
+        uso_partidario(true); 
+};

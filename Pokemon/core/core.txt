@@ -1,0 +1,34 @@
+////////////  Proposiciones simples  ////////////////////////////////////////////
+
+turno_actual(ONLY Jugador);
+rival(Jugador:jugador,Jugador:rival);// es opcional nombrar a los parametros y son ignorados pero puede ayudar a la legibilidad
+mano(Carta:x,Jugador:y); // la carta x esta en la mano del jugador y
+mano_numero(ONLY int:x,Jugador:y); // el jugador y tiene x cartas en la mano
+banco(Carta:x,Jugador:y); // la carta x esta en el banco del jugador y
+banco_numero(ONLY Numero:x,Jugador:y); // el jugador y tiene x cartas en el banco
+activo(ONLY Pokemon:x,Jugador:y); // el pokemon x esta activo en el jugador y
+tipo_energia(ONLY Energia:x,Jugador:y); // el jugador y tiene energia de tipo x
+energia_pokemon(Pokemon:x,ONLY Energia:y,ONLY Numero:z); // el pokemon x tiene z energias de tipo y
+uso_partidario(ONLY bool:x); // se ha usado un partidario en el turno
+uso_energia(ONLY bool:x); // se ha usado una energia en el turno
+
+////////////  Proposiciones compuestas  ////////////////////////////////////////////
+
+campo(pokemon:x,jugador:y)= banco(x,y) OR activo(x,y) ; // x es un pokemon del jugador, ya sea activo o en el banco
+
+
+////////////  CATEGORIAS  /////////////////////////////////////////////////
+
+Carta{}; // categoria de cartas
+
+Pokemon:Carta{ // categoria de cartas de pokemon
+    int vida,
+    energia tipo,
+    debilidad tipo
+} 
+Partidario:Carta{}; // categoria de cartas de partidario
+Objeto:Carta{}; // categoria de cartas de objeto
+Energia[fuego,agua,planta,rayo,psiquico,acero,roca,normal,veneno,dragon,oscuro]; 
+Jugador{
+    int puntos // Internamente seria jugador_puntos(x:jugador,y:puntos); 
+} [Jugador1, Jugador2];

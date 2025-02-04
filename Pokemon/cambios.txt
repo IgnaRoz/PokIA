@@ -1,0 +1,52 @@
+Las condiciones y consecuencias ya no se separan con AND y cada una va en una linea diferente
+ejemplo:
+antes
+accion BASE atacar(){ 
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: activo(x,y) AND turno_actual(z)  AND rival(r,y) AND activo(p,y) ; 
+    Consecuencias:NOT turno_actual(z) AND turno_actual(r);
+};
+ahora
+accion BASE atacar(){ 
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condiciones: 
+        activo(x,y);
+        turno_actual(z);
+        rival(r,y);
+        activo(p,y);
+    Consecuencias:
+        DEL turno_actual(z);
+        turno_actual(r);
+};
+
+WAIT
+Se ha añadido la palabra clave WAIT para indicar que se debe esperar a que se efectue una accion antes de continuar con las consecuencias actuales. Despues de elegir y efectuar las consecuencias de la accion elegida, se continua con las que estan despues de WAIT
+
+DEL
+Dentro de las consecuencias se ha sustituido el NOT por DEL, para indicar que no se esta negando sino que se esta eliminando.
+
+ONLY //quizas cambiarlo por SINGLE
+Se ha añadido la palabra clave ONLY para indicar que una proposicion solo puede tener un valor y cada vez que se cambie debe de usar la palabra clave SWAP
+ejemplo:
+ONLY turno_actual(Jugador);
+//quizas sea interesante que se use en el parametro, asi: activo(ONLY Pokemon:x,Jugador:y) para indicar que solo puede haber un pokemon x para el jugador y
+planteo tambien el usar ONLY(x) para indicar que solo puede haber x valores distintos
+
+SWAP//usar o no usar?
+Se ha añadido la palabra clave SWAP para indicar que se cambia el valor de una proposicion del tipo ONLY con el nuevo valor que se le da
+
+
+Se ha eliminado ataque como categoria y ahora seran acciones que se definan
+
+
+En las contingencias, ahora se ha añadido la palabra clave PostCondicion para indicar que se debe cumplir una condicion despues de que se ejecute la accion y PostConsecuencias para indicar que se deben ejecutar las consecuencias despues de que se cumpla la condiciones. Deberia renombrarlo a PostContingencia o algo asi?
+
+
+
+Las categorias tienen atributos a los que se pueden acceder mediante el punto 
+ejemplo
+jugador_rival(jugador).puntos++;
+Esto podria ser la abreviacion de jugador_puntos(rival,puntos++);
+
+
+Plantear el uso de variables: en las acciones para inicializar variables que se usen en las condiciones y consecuencias. Por temas de eficiencia, claridad y compilacion???

@@ -1,0 +1,144 @@
+//Variables Globales
+
+
+//Declaracion de grupos o predicados simples 
+
+turno_actual(jugador:x); // x es el jugador que tiene el turno. Solo puede tener un valor(o instancia) a la vez
+rival(jugador:x,jugador:y); // x es el jugador rival de y
+
+mano(carta:x,jugador:y); // x es una carta de la mano del jugador y. Se puede especificar o no, lo que haria que admitiera cualquier tipo de individuo
+mano_numero(numero:x,jugador:y); // x es el numero de cartas en la mano del jugador y
+
+banco(carta:x,jugador:y); // x es una carta del jugador y en su banco de juego
+banco_numero(numero:x,jugador:y); // x es el numero de cartas en el banco del jugador y
+activo(pokemon:x,jugador:y); // x es el pokemon activo del jugador y
+
+//Caso especial,  un predicado definido por una sentencia logica, una herencia de categorias podia ser un caso especifico de esto
+campo(pokemon:x,jugador:y)= banco(x,y) OR activo(x,y) ; // x es un pokemon del jugador, ya sea activo o en el banco
+
+
+tipo_energia(energia:x,jugador:y); // x es el tipo de energia del jugador y
+energia_pokemon(pokemon:x,energia:y, int: z); // x es un pokemon que tiene z energias del tipo y
+
+uso_partidario(bool:x) // x es un booleano que indica si se ha usado un partidario en el turno del jugador actual
+uso_energia(bool:x) // x es un booleano que indica si se ha usado una energia en el turno del jugador actual
+
+//Declaracion de Categorias
+carta{}; //
+
+pokemon:carta(
+    int vida,
+    energia tipo,
+    debilidad tipo
+    
+)
+partidario:carta; // cartas del tipo partidario(solo se pueden jugar una vez por turno)
+
+objeto:carta; // cartas del tipo objeto(se pueden jugar tantas como quieran por turno)
+
+energia[fuego,agua,planta,rayo,psiquico,acero,roca,normal,veneno,dragon,oscuro]; // categorias de cartas de energia
+
+
+jugador{
+    int puntos
+} [Jugador1, Jugador2]; // definimos unos elementos iniciales con nombres. ¿Se podria hacer lo mismo con el banco? No, sin enlazar de alguna manera los elementos de la banca con las cartas
+//Tambien se podria definir como:
+//jugador_puntos(x:puntos,y:jugador); // x son los puntos del jugador y
+//jugador_energia(x:tipo_energia,y:jugador); // x es el tipo de energia del jugador y
+//jugador_energia_disponible(x:energia_disponible,y:jugador); // x es la energia disponible del jugador y
+
+
+
+//acciones base
+//son aquellas que no se pueden ejecutar directamente pero que sirven de base para otras acciones
+
+accion BASE sacar_carta(x,y){// x es la carta e y el jugador
+    Condicion: mano(x,y) AND turno_actual(y); // x debe estar en la mano del jugador y y debe ser el jugador que tiene el turno
+    Consecuencias: NOT mano(x,y); // x desaparece de la mano
+};
+
+
+
+//acciones 
+//acciones que se pueden ejecutar
+
+//Se puede omitir ya que el jugador no puede jugar una carta activa directamente de la mano a no ser que sea el primer turno y esto se puede considerar estado inicial.
+accion sacar_pokemon_activo(x,y):sacar_carta{// x es el pokemon e y el jugador. Se basa en la accion sacar_carta
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: pokemon(x) AND (NOT activo(z,y)); // x debe ser un pokemon y z es el pokemon activo del jugador y, si no hay pokemon activo, se puede ejecutar
+    Consecuencias: activo(x,y); // x es el nuevo pokemon activo del jugador y. Como hereda de sacar_carta, x desaparece de la mano
+};
+
+accion sacar_pokemon_banco(x,y):sacar_carta{// x es un pokemon e y el jugador. Se basa en la accion sacar_carta
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: banco(z<3,y); // z es el numero de pokemons en el banco del jugador y, si hay menos de 3 cartas en el banco, se puede ejecutar
+    Consecuencias: banco(x,y) AND (NOT mano(x,y)); // x es la nueva carta del banco del jugador y. Como hereda de sacar_carta, x desaparece de la mano
+};
+
+accion sacar_carta_partidario(x,y):sacar_carta{// x es un partidario e y el jugador. Se basa en la accion sacar_carta
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: partidario(x) AND uso_partidario(false); // x debe ser un partidario y no se debe haber usado un partidario en el turno
+    Consecuencias: NOT uso_partidario(false) AND uso_partidario(true); // Se ha usado un partidario en el turno
+};
+
+
+accion dar_energia(x)// x es al pokemon al que se le da la energia
+{
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: pokemon(x) AND turno_actual(y) AND tipo_energia(z,y) AND uso_energia(false) AND campo(x,y); // x debe ser un pokemon, y es el jugador que tiene el turno, z es el tipo de energia del jugador y, no se debe haber usado una energia en el turno y x debe estar en el campo del jugador y
+
+    Consecuencias: uso_energia(true) AND  energia_pokemon(x,z,++); // Se ha usado una energia en el turno y el pokemon x ha recibido una energia del tipo z
+};
+
+
+
+
+
+accion BASE atacar(y){ //y es el ataque que se usa
+    Fase: normal; // Fase en la que se puede ejecutar la accion
+    Condicion: activo(x,z) AND turno_actual(z) AND pokemon_ataque(x,y) AND rival(r,z) AND activo(p,z) ; // x debe ser el pokemon activo del jugador z, z es el jugador que tiene el turno, x debe tener el ataque y, p es el pokemon activo del jugador rival r
+    Consecuencias: bajar_vida(p,y.ataque); // se baja la vida del pokemon que recibe el ataque un numero igual al ataque del pokemon que ataca. y.ataque es un atributo de la categoria ataque.
+};
+
+
+
+
+
+//Consecuencias
+// acciones que estan pensadas para usarlas unicamente dentro de una consecuencia
+//Pueden tener o no condiciones, pero siempre tienen que tener una consecuencia
+
+consecuencia bajar_vida(x,y){ // x es el pokemon que recibe el ataque y y es el ataque que recibe
+    Consecuencias: x.vida = x.vida - y; // se baja la vida del pokemon x un numero igual a y
+} 
+
+//Contingencias
+// Son acciones que amplian las acciones o consecuencias, se ejecutan cuando se cumple una condiciones especifica. Pueden tener preconsecuencias y postconsecuencias(por defecto)
+//Las condiciones se validan antes o despues de ejecutar la accion? De momento despues, pero se puede crear una precondicion.
+
+contingencia muerte_pokemon_activo: bajar_vida(x,y){
+    Condicion: activo(x,j) AND x.vida <= 0;
+    Consecuencias: fase(cambio_pokemon_activo);
+}
+contingencia muerte_pokemon_banco: bajar_vida(x,y){
+    Condicion: banco(x,j) AND x.vida <= 0;
+    Consecuencias: NOT banco(x,j) AND jugador_rival(j).puntos++;
+}
+
+contingencia muerte_sin_pokemon: muerte_pokemon_activo{
+    Condicion: banco_numero(0,y);
+    Consecuencias: fase(fin_partida);
+}
+
+
+
+FAES????
+ORGANIZACION???,
+Como manejo valores unicos? como turno_actual, rival, uso_partidario, uso_energia...
+    Podria hacer que cada vez que se asigna un valor, elimine el anterior?
+
+
+//debilidades, se debe modificar la accion atacar para que tenga en cuenta las debilidades de los pokemons
+
+¿Como manejo la visibilidad de las cartas del rival?
+¿Como manejo individuos iguales(pokemons repetidos)?
