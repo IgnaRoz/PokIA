@@ -16,7 +16,7 @@ accion dar_energia(pokemon){
         pokemon(pokemon);
         turno_actual(jugador);
         tipo_energia(energia,jugador);
-        uso_energia(false);
+        uso_energia(false);//habria que diferenciar de algun modo las variables de los individuos, quizas con un prefijo var? o con una seccion variables? mayusculas y minusculas?
         campo(pokemon,jugador);
     Consecuencias: 
         uso_energia(true);

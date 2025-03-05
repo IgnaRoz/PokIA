@@ -1,0 +1,68 @@
+1)Proposiciones simples
+
+debera guardar en una estructura del tipo set() en python, para que no se repitan los elementos. Los elementos podrian ser tuplas.
+
+debera guardar el numero y tipos de los parametros. Podria ser un array con los tipos.
+
+Debera guardar si un elemento es single o no. Podria ser un array de booleanos.
+
+Tambien podria haber una clase paramtero que guarde el tipo y si es single.
+
+El tipo debera ser una categoria.
+
+2)Categorias
+
+Debera crear una proposicion simple con el nombre de la categoria y un solo parametro.
+Si esta tiene atributos, debera crear una proposicion simple por cada atributo de la forma single nombreCategoria_nombreAtributo(pokemon1,valor) que indica que el pokemon1 tiene el valor en el atributo nombreAtributo.
+Debera poder crear y/o asignar individuos asociados a la categoria?
+
+2.2)elementos
+-Nombe de la categoria
+-Lista de atributos, los atributos podria ser un objeto con nombre y proposicion asociada.
+-Proposicion asociada a la categoria.
+-categoria padre. Puede ser null
+
+2.3)Categorias especiales
+Algunas categorias especiales como int o boolean, podrian tener un tratamiento especial. Estas podrian definirse creando una clase hija de categoria y sobreescribiendo los metodos necesarios.
+
+
+
+
+LAS REFERENCIAS SERAN DE LAS PROPOSICIONES Y CATEGORIAS SERAN EN TIEMPO DE EJECUCION MEDIANTE EL NOMBRE DE LA PROPOSICION O CATEGORIA. Esto ahorrara trabajo en el compilador y permitira trabajar dinamicamente pero con el incomveniente de tener que buscar constantemente las referencias. Quizas se podria evitar guardando la referencia al objeto despues de la primera busqueda.
+
+
+3)Acciones
+
+accion nombreAccion(parametros){
+    Condiciones: condiciones;
+    Consecuencias: consecuencias;
+
+}
+3.1)Condiciones
+
+Sera una lista de proposicioens simples(luego se añadiran las compuestas) donde deberan ser validas todas para poder ser elegida la accion.
+
+cuando una variable  aparece como unico parmetro en una proposicion, la variable que se creara se dice que es una variable independiente, al no estar relacionada con ninguna otra.  De ahora en adelante, una proposicion simple con varios parametros es un predicado, si no se dice lo contrario una proposicion simple se considerara que tiene un solo parametro.
+
+Como resultado de evaluar las condiciones, se creara una lista de soluciones. Cada solucion consistira en un conjunto de individuos, uno por cada variable que se haya econtrado.
+
+
+////Para mas adelante
+Al recorrer las condiciones, se pueden dar los siguientes casos:
+-Proposicion simple, con un nuevo paremtro: Se crea una nueva variable independiente con los valores de la proposicion.
+-Proposicion simple, con un parametro ya existente: Se efectua una operacion de interseccion entre los valores de la variable y los valores de la proposicion que se almacena en la variable.
+-Predicado sin parammetros conocidos: Se crea un nuevo conjunto resultado de la union cruzada entre los valores del predicado. De forma que por cada valor de la primera variable, se une cada valor de la segunda y si hubiera una tercera cada par anterior se le añadiria cada valor de la tercera. Finalmente se vuelve a eferctuar una union cruzada con el conjunto de soluciones actual.
+-Predicado con parametros conocidos: ....
+/////////////
+
+///Forma sencilla
+Se crea una lista de soluciones, cada solucion sera un diccionario con claves el nombre de cada variable econtrada y como valor el individuo de la solucion.
+
+Primero se recorre las condiciones escogiendo unicamente los predicados.
+Por cada parametro del predicado, se comprueba si existe en la solucion.
+Si no esta se hace una union cruzada de forma que cada solucion actual se le añade cada individuo de la variable del predicado.
+Si ya esta, se elimina las soluciones cuyos individuos de dicha variable no este en el predicado.
+
+
+Cuando se haya terminado de recorrer las condiciones, se debera hacer una union cruzada con la solucion por cada variable independiente.
+

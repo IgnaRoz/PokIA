@@ -60,3 +60,26 @@ Las acciones pueden heredar de otra accion, en cuyo caso tambien se deberan cump
 El atributo Fase, es experimental y podria desaparecer en versiones futuras. Internamente no hay diferencia entre un atributo Fase y una condicion normal en base a alguna proposicion simple como fase(nombreFase).
 
 4.1) Condiciones
+
+Para que una accion este disponible, se deberan cumplir todas las condiciones de la accion como si estuvieran unidas por un AND.
+
+Una condicion podria tener la forma OR{condicion1; condicion2; ...} que indica que se debera cumplir al menos una de las condiciones de la lista. Se plantea tambien incluir otra de la forma AND{condicion1; condicion2; ...} que indica que se deberan cumplir todas las condiciones de la lista.
+
+4.2) Consecuencias
+
+Las consecuencias son las acciones que se ejecutaran si se cumplen todas las condiciones de la accion. Se ejecutaran en el orden en el que esten escritas y si alguna de ellas es un WAIT, se pedira otra accion a ejecutar y despues de efectuar las consecuencias, se seguira con las consecuencias de la accion previa justo por donde lo dejo tras el WAIT.
+
+Cuando hay una proposicion como condicion, esta no se analizara como una condicion, sino que se ejecutara como una consecuencia, es decir se creara un nuevo registro en la proposicion que en el futuro se validara como true en una condicion.
+Si lo que se quiere es eliminar un registro de una proposicion, se debera usar DEL proposicion.
+Si la proposicion usa un atributo del tipo single, cuando se quiere registrar un nuevo registro se eliminara el anterior de forma que solo pueda existir uno a la vez.
+
+4.3) Consecuencias definidas.
+
+Las consecuencias se pueden definir fuera de una accion de forma que esta pueda ser reutilizada en varias acciones. Las consecuencias definidas tambien pueden condiciones, consecuencias o incluso estar vacia. Si se ejecuta una consecuencia definida dentro de las consecuencias de una accion, esta ejecutara las consecuencias de la consecuencia definida, pero si hay definida una condicion, esta solo se ejecutara si se cumple la condicion de la consecuencia definida.
+
+
+5) Contingencias
+
+Tanto las acciones como las consecuencias pueden tener comportamientos excepcionales que se definen en las contingencias. Antes de ejecutar una accion o consecuencia, si tiene una contingencia se comprobara las condiciones de esta y si se cumplen se ejcuta las consecuencias de la contingencia antes que las de la accion o consecuencia.
+
+Las contingencias tambien puede definir un comportamiento despues de haber terminado de ejecutar una accion o consecuencia. Estas se definen igual pero con el atributo PostCondicion y PostConsecuencias.
