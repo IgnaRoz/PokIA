@@ -35,12 +35,34 @@ class SolucionParcial:
             raise TypeError("El parámetro 'variable' debe ser del tipo Variable")
         if variable not in self.indice:
             self.indice[variable] = len(self.indice)
+    def is_empty(self):
+        return len(self.conjunto) == 0
     def print(self):
         for elemento in self.conjunto:
             print("Elemento:")
             for i, variable in enumerate(self.indice):
                 print(f"{variable} = {elemento[i]}")
-        
+class Condicion:
+    def __init__(self, proposicion, parametros):
+        self.proposicion = proposicion
+        self.parametros = parametros
+    def comprobar(self, solucion_inicial):
+        if not isinstance(solucion_inicial, SolucionParcial):
+            raise TypeError("El parámetro 'solucion_inicial' debe ser del tipo SolucionParcial")
+        return self.proposicion.comprobar(solucion_inicial, self.parametros)
+class Accion:
+    def __init__(self, nombre, condiciones):
+        self.nombre = nombre
+        self.condiciones = condiciones
+    def comprobar(self):
+        solucion = SolucionParcial([])
+        for condicion in self.condiciones:
+            if not isinstance(condicion, Condicion):
+                raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion")
+            solucion = condicion.comprobar(solucion)
+        return solucion
+            
+
 class Proposicion:
     def __init__(self, nombre):
         
@@ -137,21 +159,42 @@ class Proposicion:
 
 
 if __name__ == "__main__":
+
+    nacho = Individuo("nacho")
+    pablo = Individuo("pablo")
+    juana = Individuo("juana")
+    maria = Individuo("maria")
+    Persona = Proposicion("Persona")
+    Persona.elementos.add((nacho,))
+    Persona.elementos.add((pablo,))
+    Persona.elementos.add((juana,))
+    Persona.elementos.add((maria,))
+
+    Hombre = Proposicion("Hombre")
+    Hombre.elementos.add((nacho,))
+    Hombre.elementos.add((pablo,))
+    Hombre.elementos.add((juana,))
+
+    Mujer = Proposicion("Mujer") 
+    Mujer.elementos.add((maria,))
+    Mujer.elementos.add((juana,))
+
+    Pareja = Proposicion("Pareja")
+    Pareja.elementos.add((nacho, maria))
+    Pareja.elementos.add((pablo, juana))
+
     X = Variable("X")
     Y = Variable("Y")
     Z = Variable("Z")
-    ind_1 = Individuo("ind_1")
-    ind_2 = Individuo("ind_2")
-    ind_3 = Individuo("ind_3")
-    proposicion = Proposicion("proposicion")
-    proposicion.elementos.add((ind_1, ind_2))
-    proposicion.elementos.add((ind_1, ind_1))
-    proposicion.elementos.add((ind_1, ind_3))
-    proposicion.elementos.add((ind_2, ind_3))
-    #print(proposicion.elementos)
 
-    solucion_inicial = SolucionParcial([Y])
-    solucion_inicial.add_elemento((ind_1,))
-    solucion_inicial.add_elemento((ind_3,))
-    solucion_final=proposicion.comprobar(solucion_inicial, [X,Y])
-    solucion_final.print()
+    condicion1 = Condicion(Persona, [X])
+    condicion2 = Condicion(Hombre, [X])
+    condicion3 = Condicion(Persona, [Y])
+    condicion4 = Condicion(Mujer, [Y])
+    condicion5 = Condicion(Pareja, [X,Y])
+    accion = Accion("accion", [condicion1, condicion2, condicion3, condicion4, condicion5])
+
+    solucion = accion.comprobar()
+    solucion.print()
+
+
