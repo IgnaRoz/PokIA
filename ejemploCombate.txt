@@ -16,7 +16,7 @@ pokemon Pikachu{
 //      p = pokemon que recibe el ataque
 //};
 accion impactrueno:atacar(){
-    Condicion: energia_pokemon(x,rayo,1);
+    Condicion: energia_pokemon(x,rayo,>=1);
     Consecuencias: bajar_vida(p,100);
 }
 accion trueno:atacar(){

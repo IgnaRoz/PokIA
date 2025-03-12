@@ -8,17 +8,23 @@ Cosas por hacer:
         -(hecho)Algun nuevo tipo de parametro o funcion para poder usar los atributos en las proposiciones
             -Se ha solucionado creando un nuevo tipo de condicion que acepta funciones y parametros
         -(hecho)Los individuos deberian almacenar las categorias a la que pertenecen
-        -Se tiene que tener en cuenta que una categoria puede heredar de otra
+        -(hecho)Se tiene que tener en cuenta que una categoria puede heredar de otra
     -Proposiciones
         -Pensar como se podria añadir un not o un or
-        -Deben de poder ejecutar consecuencias de las acciones
+        -Negaciones de las proposiciones en las condiciones
+        -(hecho)Deben de poder ejecutar consecuencias de las acciones
+            -Se hacen desde la accion
         -Cuando se crea una proposicion, se deberia crear una accion del tipo consecuencia que pueda ejecutarse o es tarea de la accion saber que hacer cuando tiene una proposicion en la seccion de consecuencias?
     -Acciones
-        -Consecuencia de las acciones
-        -Como diferencio una "asginacion" de una "eliminacion" de una proposicion en la seccion de consecuencias???
+        -(hecho)Consecuencia de las acciones
+        -(hechoComo diferencio una "asginacion" de una "eliminacion" de una proposicion en la seccion de consecuencias???
+            -Las consecuencias tienen diferentes tippos, cada uno con su propio metodo ejecutar
         -Pensar como seria las acciones del tipo consecuencia(definidas) y contingencias
         -(hecho)Pensar como trabajar con parametros numericos
             -Se ha creado un nuevo tipo de individuo que acepta un valor numerico, este valor se puede comparar con otros valores numericos dentro de un nuevo tipo de condicion llamada CondicionFuncion
+        -Pensar en las consecuencias tipo jugador_rival(rival).vida++
+            -Puede que creando una consecuencia definida con la condicion jugador_rival(rival) y la consecuencia rival.vida++
+            -Mejor: Se mete jugador_rival(rival) como condicion y ya se tiene la variable rival para poder hacer rival.vida ++
 
 '''
 import inspect
@@ -29,8 +35,9 @@ class Brain:
             self.categorias = {}
             self.proposiciones = {}
             self.indiviuos = {}
-    def add_categoria(self, nombre):
-        categoria = Categoria(nombre)
+            self.acciones = {}
+    def add_categoria(self, nombre,atributos = None ,padre = None):
+        categoria = Categoria(nombre,atributos,padre)
         self.categorias[nombre] = categoria
         self.add_proposicion(nombre)
     #def add_categoria(self, nombre, atributos):
@@ -42,21 +49,55 @@ class Brain:
         self.proposiciones[nombre] = proposicion
     def get_proposicion(self, nombre):
         return self.proposiciones[nombre]
-    def add_individuo(self, nombre_individuo, categoria):
+    def add_individuo(self, nombre_individuo, categoria,atributos=None):
+        #atributos es un diccionario con claves el nombre de los atributos y el valor es el valor del atributo. Deben ser iguales a los de la categoria
         if not isinstance(nombre_individuo, str):
             raise ValueError("Individuo debe ser de tipo string")
         categoria = self.get_categoria(categoria)
         proposicion = self.get_proposicion(categoria.nombre)
+        atributos_categoria = categoria.get_atributos()
+        if atributos is None:
+            atributos = {}
+        for atributo in atributos_categoria:
+            if atributo not in atributos:
+                raise ValueError(f"El atributo '{atributo}' no se encuentra en el diccionario de atributos")
+            setattr(self.indiviuos[nombre_individuo], atributo, atributos[atributo])
+
+
         proposicion.elementos.add((nombre_individuo,)) 
         self.indiviuos[nombre_individuo] = Individuo(nombre_individuo, categoria)  
     #Falta un metodo para crear una accion
+    def add_accion(self,accion):
+        self.acciones[accion.nombre] = accion
+    def get_accion(self,nombre):
+        return self.acciones[nombre]
+    
+
+        
+
     #Falta un metodo para mostar todas las acciones que se pueden ejecutar y sus parametros
+    def acciones_disponibles(self):
+        available_actions = []
+        for accion in self.acciones.values():
+            solucion = accion.comprobar()
+            if not solucion.is_empty():
+                print("Acción:", accion.nombre)
+                solucion.print()
+                available_actions.append((accion, solucion))
+        return available_actions
 
 class Categoria:
-    def __init__(self, nombre):
+    def __init__(self, nombre, atributos=None, padre = None):
         self.nombre = nombre
         self.atributos = [] #De momento ignoramos los atributos
-        #self.padre = None
+        self.padre = padre
+        self.atributos = atributos #Atributos solo alamacena los atributos de la categoria pero no hereda la de los padres, para eso usar get_atributos
+    def get_atributos(self):
+        atributos = []
+        if self.padre:
+            atributos.extend(self.padre.atributos)
+        atributos.extend(self.atributos)
+        return atributos
 
 
 class Individuo(str):
@@ -73,6 +114,8 @@ class  IndividuoNumerico(Individuo):
         self.nombre = str(valor)
 class Variable(str):
     pass
+
+#Eliminar
 class ParametroCondicion():
     def __init__(self,funcion,argumentos=None):
         if argumentos and isinstance(argumentos,tuple):
@@ -163,24 +206,108 @@ class CondicionFuncion:
             
 
 class Accion:
-    def __init__(self, nombre, condiciones):
+    def __init__(self, nombre, condiciones,consecuencias,padre = None):
+        self.nombre = nombre
+        #habria que comprobar que todas las condiciones son del tipo Condicion o CondicionFuncion
+        self.condiciones = condiciones
+        self.consecuencias = consecuencias
+        self.padre = padre
+        self.contingencias = []
+    def add_contingencia(self,condicion,consecuencia):
+        self.contingencias.append((condicion,consecuencia))
+    def get_condiciones(self):
+        condiciones = []
+        if self.padre:
+            condiciones = self.padre.get_condiciones()
+        
+        condiciones.extend(self.condiciones)
+        return condiciones
+    def get_consecuencias(self):
+        consecuencias = []
+        if self.padre:
+            consecuencias = self.padre.get_consecuencias()
+        consecuencias.extend(self.consecuencias)
+        return consecuencias
+    def comprobar(self):
+        solucion = SolucionParcial([])
+        condiciones = self.get_condiciones()
+        for condicion in condiciones:
+            if not isinstance(condicion, (Condicion, CondicionFuncion)):
+                raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
+            solucion = condicion.comprobar(solucion)
+        return solucion
+    def ejecutar(self,argmunetos):
+        #Falta implementar
+        #Ejecuta las consecuencias hasta que se queden sin consecuencias o se encuentre un wait
+        #Deberia devolver las consecuencias que quedan por ejecutar si se encuentra un wait
+        consecuencias = self.get_consecuencias()
+        for indice, consecuencia in enumerate(consecuencias):
+            if isinstance(consecuencia, (ConsecuenciaAsignacion,ConsecuenciaEliminacion)):
+                consecuencia.ejecutar(argmunetos)
+            elif isinstance(consecuencia, ConsecuenciaWait):
+                return self.consecuencias[indice:]
+        return []
+
+        
+        
+    #def get_consecuencias(self,argumentos):
+class Consecuencia:
+    #tipos posibles de consecuencias: Asignacion, Eliminacion, Incremento?Decremento?, Wait
+    #Las consecuencias podrian ser una consecuencia definida y tener contingencias propias?
+    pass
+class ConsecuenciaAsignacion(Consecuencia):       
+    def __init__(self,proposicion):
+        self.proposicion = proposicion
+    def ejecutar(self, argumentos):
+        #habria que tener en cuenta aqui si la proposicion es del tipo single o unique
+        self.proposicion.add_elemento(argumentos)
+class ConsecuenciaEliminacion(Consecuencia):       
+    def __init__(self,proposicion):
+        self.proposicion = proposicion
+    def ejecutar(self, argumentos):
+        #habria que tener en cuenta aqui si la proposicion es del tipo single o unique
+        self.proposicion.delete_elemento(argumentos)   
+class ConsecuenciaWait(Consecuencia):
+    pass   
+
+
+#El tipo inclemento y decremento se hara despues de plantear el tipo single o unique.  
+
+
+class ConsecuenciaDefinida(Consecuencia):
+    def __init__(self,nombre,condiciones,consecuencias):
         self.nombre = nombre
         self.condiciones = condiciones
-    def comprobar(self):
+        self.consecuencias = consecuencias
+    def ejecutar(self,argumentos):
         solucion = SolucionParcial([])
         for condicion in self.condiciones:
             if not isinstance(condicion, (Condicion, CondicionFuncion)):
                 raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
             solucion = condicion.comprobar(solucion)
-        return solucion
-            
+        for indice, consecuencia in enumerate(self.consecuencias):
+            if isinstance(consecuencia, (ConsecuenciaAsignacion,ConsecuenciaEliminacion)):
+                consecuencia.ejecutar(argumentos)
+            elif isinstance(consecuencia, ConsecuenciaWait):
+                return self.consecuencias[indice:]
 
+
+        pass
 class Proposicion:
     def __init__(self, nombre):
         
             
         self.elementos = set()
         self.nombre = nombre
+    
+    def add_elemento(self, elemento):
+        if not isinstance(elemento, (list, tuple)):
+            raise TypeError("El parámetro 'elemento' debe ser una lista o una tupla")
+        self.elementos.add(elemento)
+    def delete_elemento(self, elemento):
+        if not isinstance(elemento, (list, tuple)):
+            raise TypeError("El parámetro 'elemento' debe ser una lista o una tupla")
+        self.elementos.remove(elemento)
     
     def comprobar(self, solucion_inicial,parametros):
         #Quitar el tipo de dado de SolucionParcial y usar un diccionario????
@@ -298,67 +425,7 @@ class Proposicion:
 
 if __name__ == "__main__":
 
-    nacho = Individuo("nacho")
-    pablo = Individuo("pablo")
-    juana = Individuo("juana")
-    maria = Individuo("maria")
-    Persona = Proposicion("Persona")
-    Persona.elementos.add((nacho,))
-    Persona.elementos.add((pablo,))
-    Persona.elementos.add((juana,))
-    Persona.elementos.add((maria,))
-
-    Hombre = Proposicion("Hombre")
-    Hombre.elementos.add((nacho,))
-    Hombre.elementos.add((pablo,))
-    Hombre.elementos.add((juana,))
-
-    Mujer = Proposicion("Mujer") 
-    Mujer.elementos.add((maria,))
-    Mujer.elementos.add((juana,))
-
-    Pareja = Proposicion("Pareja")
-    Pareja.elementos.add((nacho, maria))
-    Pareja.elementos.add((pablo, juana))
-
-    edad_15 = IndividuoNumerico(15)
-    edad_18 = IndividuoNumerico(18)
-    edad_20 = IndividuoNumerico(20)
-    edad_30 = IndividuoNumerico(30) 
-
-    edad = Proposicion("edad")
-    edad.elementos.add((nacho, edad_20))
-    edad.elementos.add((pablo, edad_30))
-    edad.elementos.add((juana, edad_15))    
-    edad.elementos.add((maria, edad_20))
-
-    X = Variable("X")
-    Y = Variable("Y")
-    Z = Variable("Z")
-
-    condicion1 = Condicion(edad, [X,Y])
-    condicionEsp = CondicionFuncion(lambda x: x.valor > 18, (Y,))
-    accion = Accion("accion", [condicion1, condicionEsp])
-    solucion = accion.comprobar()
-    solucion.print()
-    
-
-    #funcion_mayor_edad= lambda x: x.valor > 18
-    #condicion_edad = ParametroCondicion(funcion_mayor_edad,(Y,))
-    #
-    #solucion = SolucionParcial([])
-    #condicion_mayor_edad = Condicion(edad, [X,condicion_edad])
-    #solucion = condicion_mayor_edad.comprobar(solucion)
-    #solucion.print()
-
-    #condicion1 = Condicion(Persona, [X])
-    #condicion2 = Condicion(Hombre, [X])
-    #condicion3 = Condicion(Persona, [Y])
-    #condicion4 = Condicion(Mujer, [Y])
-    #condicion5 = Condicion(Pareja, [X,Y])
-    #accion = Accion("accion", [condicion1, condicion2, condicion3, condicion4, condicion5])
-#
-    #solucion = accion.comprobar()
-    #solucion.print()
-
-
+    brain = Brain()
+    brain.add_categoria("pokemon",["vida","energia"])#incluir tipos como int o individuo?crear proposicion tipo pokemon_vida(pokemon,vida)???
+    brain.add_categoria("pikachu", padre="pokemon")#añadir valores por defecto?
+    brain.add_individuo("pikachu_1",brain.get_categoria("pikachu"),{"vida":100,"energia":"rayo"})

@@ -83,3 +83,7 @@ Las consecuencias se pueden definir fuera de una accion de forma que esta pueda 
 Tanto las acciones como las consecuencias pueden tener comportamientos excepcionales que se definen en las contingencias. Antes de ejecutar una accion o consecuencia, si tiene una contingencia se comprobara las condiciones de esta y si se cumplen se ejcuta las consecuencias de la contingencia antes que las de la accion o consecuencia.
 
 Las contingencias tambien puede definir un comportamiento despues de haber terminado de ejecutar una accion o consecuencia. Estas se definen igual pero con el atributo PostCondicion y PostConsecuencias.
+
+//Se podrian crear tambien los tipos de excepcion, donde se podria ejecutar la accion pero bajo otras condiciones. Seria el equivalente a un OR de las condiciones de la accion.
+
+//Otro tipo seria el tipo podria ser la extencion? que impondria una condicion del tipo Si X entonces tambien Y. Es decir que si cumple la primera condicion de la excepcion entonces para ejecutar la accion tambien debe de cumplir la segunda condicion.

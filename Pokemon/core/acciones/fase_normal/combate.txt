@@ -53,7 +53,7 @@ contingencia muerte_pokemon_activo: bajar_vida(pokemon,ataque){
         pokemon.vida <= 0;
     PostConsecuencias: 
         DEL activo(pokemon,jugador);
-        jugador_rival(rival).puntos++;
+        jugador_rival(rival).puntos++; // Se podria convertir en una consecuencia con condicion jugador_rival(rival) y consecuencia rivel.puntos++???Mejor tener jugador_rival(rival) en las condiciones y ya se puede usar la variable rival en las consecuencias
         turno_actual(jugador);
         fase(cambio_pokemon_activo);
         WAIT;

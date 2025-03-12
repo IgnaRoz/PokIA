@@ -21,3 +21,7 @@ contingencia intercambio_pokemon_activo: intercambio_pokemon(pokemon:pokemon){
         banco(pokemon_activo,jugador) 
         DEL activo(pokemon_activo,jugador);
 }
+
+
+//Se podrian crear tambien los tipos de excepcion, donde se podria ejecutar la accion pero bajo otras condiciones. Seria el equivalente a un OR de las condiciones de la accion.
+//Otro tipo seria el tipo podria ser la extencion? que impondria una condicion del tipo Si X entonces tambien Y. Es decir que si cumple la primera condicion de la excepcion entonces para ejecutar la accion tambien debe de cumplir la segunda condicion.
