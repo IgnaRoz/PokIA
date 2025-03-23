@@ -1,0 +1,91 @@
+No habra mano, solo se jugara con los pokemon en un campo con los pokemons dados.
+No habra energia, cada pokemon tiene un ataque con un valor de dañó 
+
+Se podra cambiar de pokemon activo tantas veces como quiera en el mismo turno, pero al atacar se cambiara de turno
+
+Las categorias seran:
+    -pokemon
+        -vida // se corresponde a una proposicion pokemon_vida(pokemon,vida)
+        subcategorias:
+            -Pikachu //Las subcategorias tendrian que especificar los atributos del padre, como la vida
+            -Eevee
+            -ratata
+            -Piggy
+    -Jugador
+
+
+
+Proposiciones:
+    -pokemon_activo(pokemon,jugador)//el pokemon X activo del jugador Y
+    -pokemon_banco(pokemon,jugador)//el pokemon X en el banco del jugador Y
+    -jugador_rival(jugador, rival)//rival y del jugador X
+    -turno_actual(jugador)// El turno actual es del jugador X
+Acciones:
+    -atacar()//El pokemon del jugador con turno ataca al del rival
+        ACCION BASE // No se puede ejecutar, solo sirve para heredar
+        Condiciones:
+            pokemon(X)
+            turno_actual(Y)
+            pokemon_activo(X,Y)
+            jugador_rival(Y,Z)//rival = Z
+            pokemon(X2)
+            pokemon_activo(X2,Z)
+        Consecuencias:
+            DEL turno_actual(Y)
+            turno_actual(Z)
+
+    -cambiar_pokemon(X)// X debe ser un pokemon del banco que se desea poner como pokemon activo
+        Condiciones:
+            pokemon(X)
+            turno_actual(Y)
+            pokemon_banco(X,Y)
+        Consecuencias:
+            Del pokemon_banco(X,Y)
+            pokemon_activo(X,Y)
+    -impactrueno:atacar()
+        Condiciones:
+            pikachu(X)
+        Consecuencias:
+            bajar_vida(X2,50)
+    -placaje():atacar()
+        Condiciones:
+            Eevee(X)
+        Consecuencias:
+            bajar_vida(X2,20)
+    -tornado():atacar()
+        Condiciones:
+            Piggy(X)
+        Consecuencias:
+            bajar_vida(X2,30)
+    -mordisco():atacar()
+        Condiciones:
+            Ratata(X)
+        Consecuencias:
+            bajar_vida(X2,10)
+
+//nota: las contingencias heredan las variables de las acciones, tanto la de los parametros(X) como las de las condiciones(Y)
+
+Contingencias:
+    -cambiar_pokemon_activo():cambiar_pokemon(X)
+        Condiciones://Por defecto Precondiciones
+            pokemon_activo(X,Y)
+        Consecuencias: //Por defecto Preconsecuencias
+            Del pokemon_activo(X,Y)
+            pokemon_banco(X,Y) 
+    -pokemon_muerto():bajar_vida(X,Y)
+        Condiciones:
+            pokemon_vida(X,V)
+            V <= 0
+        Consecuencias:
+            Del pokemon_activo(X,Y)
+
+    
+
+
+Consecuencias:
+    -bajar_vida(X,Y)//X es un pokemon e Y es un valor numerico que le sera restado a la vida del pokemon X
+        Condiciones:
+            Pokemon(X)
+        Consecuencias
+            pokemon(X,V)
+            V -=Y

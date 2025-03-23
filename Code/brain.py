@@ -28,7 +28,7 @@ Cosas por hacer:
 
 '''
 import inspect
-
+import copy
 class Brain:
 
     def __init__(self):
@@ -40,6 +40,9 @@ class Brain:
         categoria = Categoria(nombre,atributos,padre)
         self.categorias[nombre] = categoria
         self.add_proposicion(nombre)
+        if atributos:
+            for atributo in atributos:
+               self.add_proposicion(f"{nombre}_{atributo}")
     #def add_categoria(self, nombre, atributos):
         # falta añadir los atributos
     def get_categoria(self, nombre):
@@ -49,23 +52,51 @@ class Brain:
         self.proposiciones[nombre] = proposicion
     def get_proposicion(self, nombre):
         return self.proposiciones[nombre]
-    def add_individuo(self, nombre_individuo, categoria,atributos=None):
+    def get_proposiciones_atributos(self,categoria):
+        #comprobar que categoria es del tipo categoria, sino devolver error
+        if not isinstance(categoria, Categoria):
+            raise TypeError("El parametro 'categoria' debe ser del tipo Categoria")
+        proposiciones_atributos = []
+        padre = categoria
+        while padre:
+            if padre.atributos:
+                for atributo in padre.atributos:
+                    proposicion = self.get_proposicion(f"{padre.nombre}_{atributo}")
+                    if not proposicion:
+                        raise TypeError(f"No se ha econtrado la proposicion:{padre.nombre}_{atributo}")
+                    proposiciones_atributos.append(proposicion)
+            if padre.padre:
+                padre = self.get_categoria(padre.padre)
+            else:
+                padre = None
+
+            pass
+        return proposiciones_atributos
+
+    def add_individuo(self, individuo, categoria,atributos=None):
         #atributos es un diccionario con claves el nombre de los atributos y el valor es el valor del atributo. Deben ser iguales a los de la categoria
-        if not isinstance(nombre_individuo, str):
-            raise ValueError("Individuo debe ser de tipo string")
+        if not isinstance(individuo, Individuo):
+            raise ValueError("Individuo debe ser de tipo Individuo o string")
         categoria = self.get_categoria(categoria)
         proposicion = self.get_proposicion(categoria.nombre)
-        atributos_categoria = categoria.get_atributos()
-        if atributos is None:
-            atributos = {}
-        for atributo in atributos_categoria:
-            if atributo not in atributos:
-                raise ValueError(f"El atributo '{atributo}' no se encuentra en el diccionario de atributos")
-            setattr(self.indiviuos[nombre_individuo], atributo, atributos[atributo])
-
-
-        proposicion.elementos.add((nombre_individuo,)) 
-        self.indiviuos[nombre_individuo] = Individuo(nombre_individuo, categoria)  
+        proposiciones_atributos = self.get_proposiciones_atributos(categoria)
+        for prop in proposiciones_atributos:
+            #las proposiciones de atributos tienen la forma de padre_atributo
+            #Por lo que si queremos obtener el nombre del atributo usamos el _ para partir el string
+            nombre_atributo = prop.nombre.rsplit("_",1)[1]
+            if nombre_atributo not in atributos.keys():
+                raise ValueError(f"El atributo {nombre_atributo} no se le ha asignador un valor")
+            valor_atributo = atributos[nombre_atributo]
+            prop.add_elemento((individuo,valor_atributo))
+            del atributos[nombre_atributo]
+        if atributos and len(atributos) > 0:
+            raise TypeError(f"Hay atributos que no se usan")
+        proposicion.elementos.add((individuo,)) 
+        while categoria.padre:
+            categoria = self.get_categoria(categoria.padre)
+            proposicion = self.get_proposicion(categoria.nombre)
+            proposicion.elementos.add((individuo,)) 
+        self.indiviuos[individuo.nombre] = individuo 
     #Falta un metodo para crear una accion
     def add_accion(self,accion):
         self.acciones[accion.nombre] = accion
@@ -83,13 +114,13 @@ class Brain:
             if not solucion.is_empty():
                 print("Acción:", accion.nombre)
                 solucion.print()
-                available_actions.append((accion, solucion))
+                available_actions.append((accion, solucion.copy()))
         return available_actions
 
 class Categoria:
     def __init__(self, nombre, atributos=None, padre = None):
         self.nombre = nombre
-        self.atributos = [] #De momento ignoramos los atributos
+        #self.atributos = [] #De momento ignoramos los atributos
         self.padre = padre
         self.atributos = atributos #Atributos solo alamacena los atributos de la categoria pero no hereda la de los padres, para eso usar get_atributos
     def get_atributos(self):
@@ -98,6 +129,7 @@ class Categoria:
             atributos.extend(self.padre.atributos)
         atributos.extend(self.atributos)
         return atributos
+        
 
 
 class Individuo(str):
@@ -164,6 +196,8 @@ class SolucionParcial:
             self.indice[variable] = len(self.indice)
     def is_empty(self):
         return len(self.conjunto) == 0
+    def copy(self):
+        return copy.copy(self)
     def print(self):
         for elemento in self.conjunto:
             print("Elemento:")
@@ -203,7 +237,15 @@ class CondicionFuncion:
             if self.funcion(*argumentos):
                 solucion_final.add_elemento(elemento)
         return solucion_final
-            
+
+class Contingencia:
+    def __init__(self,nombre,condiciones,consecuencias,postcondiciones=False,postconsecuencias=False):
+        #en principio no tiene sentido teber postcondiciones si hay preconsecuencias, ya que para cuando se comprueben las codinciones ya se han ejecutado las consecuencias de la accion
+        self.nombre = nombre
+        self.condiciones = condiciones  
+        self.consecuencias = consecuencias
+        self.postcondiciones = postcondiciones
+        self.postconsecuencias = postconsecuencias
 
 class Accion:
     def __init__(self, nombre, condiciones,consecuencias,padre = None):
@@ -213,8 +255,8 @@ class Accion:
         self.consecuencias = consecuencias
         self.padre = padre
         self.contingencias = []
-    def add_contingencia(self,condicion,consecuencia):
-        self.contingencias.append((condicion,consecuencia))
+    def add_contingencia(self,contingencia):
+        self.contingencias.append(contingencia)
     def get_condiciones(self):
         condiciones = []
         if self.padre:
@@ -231,21 +273,46 @@ class Accion:
     def comprobar(self):
         solucion = SolucionParcial([])
         condiciones = self.get_condiciones()
+        inicializada = False
+        
         for condicion in condiciones:
             if not isinstance(condicion, (Condicion, CondicionFuncion)):
                 raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
+            if solucion.is_empty():
+                if not inicializada:
+                    inicializada= True
+                else:
+                    return solucion
             solucion = condicion.comprobar(solucion)
         return solucion
-    def ejecutar(self,argmunetos):
-        #Falta implementar
+    def ejecutar(self,argmunetos):#deberia cambiar el nombre de argumentos a solucion?
+        #Falta implementar:
         #Ejecuta las consecuencias hasta que se queden sin consecuencias o se encuentre un wait
         #Deberia devolver las consecuencias que quedan por ejecutar si se encuentra un wait
+        
         consecuencias = self.get_consecuencias()
+
+        #comprobamos si hay alguna precondicion de contingencia
+        for contingencia in self.contingencias:
+            if not contingencia.postcondiciones:
+                if contingencia.postconsecuencias:
+                    #Si es una postconsecuencia se añaden a las consecuencias para luego ejecutarlas
+                    consecuencias.append(contingencia.consecuencias)
+                else:
+                    #Si es una preconsecuencia se ejecutan directamente
+                    for consecuencia in contingencia.consecuencias:
+                        consecuencia.ejecutar(argumentos)
+        #otra forma posible de aplicar contingencias es definiendolos como un nuevo tipo de consecuencias que se añaden al final o 
         for indice, consecuencia in enumerate(consecuencias):
-            if isinstance(consecuencia, (ConsecuenciaAsignacion,ConsecuenciaEliminacion)):
+            if isinstance(consecuencia, (ConsecuenciaAsignacion,ConsecuenciaEliminacion,ConsecuenciaFuncion)):
                 consecuencia.ejecutar(argmunetos)
             elif isinstance(consecuencia, ConsecuenciaWait):
                 return self.consecuencias[indice:]
+        for contingencia in self.contingencias:
+            if contingencia.postcondiciones:
+              for consecuencia in contingencia.consecuencias:
+                        consecuencia.ejecutar(argumentos)  
+                
         return []
 
         
@@ -256,19 +323,60 @@ class Consecuencia:
     #Las consecuencias podrian ser una consecuencia definida y tener contingencias propias?
     pass
 class ConsecuenciaAsignacion(Consecuencia):       
-    def __init__(self,proposicion):
+    def __init__(self,proposicion,parametros):
         self.proposicion = proposicion
-    def ejecutar(self, argumentos):
+        self.parametros  = parametros
+    def ejecutar(self, solucion):
         #habria que tener en cuenta aqui si la proposicion es del tipo single o unique
-        self.proposicion.add_elemento(argumentos)
+        elemento = []
+        for elemento_solucion in solucion.conjunto:
+            for parametro in self.parametros:
+                try:
+                    indice_parametro = solucion.indice[parametro]
+                    elemento.append(elemento_solucion[indice_parametro])
+                except KeyError:
+                    raise ValueError("El parametro no esta en el indice")
+            self.proposicion.add_elemento(elemento)
+                
+
 class ConsecuenciaEliminacion(Consecuencia):       
-    def __init__(self,proposicion):
+    def __init__(self,proposicion,parametros):
         self.proposicion = proposicion
-    def ejecutar(self, argumentos):
+        self.parametros = parametros
+    def ejecutar(self, solucion):
         #habria que tener en cuenta aqui si la proposicion es del tipo single o unique
-        self.proposicion.delete_elemento(argumentos)   
+        elemento = []
+        for elemento_solucion in solucion.conjunto:
+            for parametro in self.parametros:
+                try:
+                    indice_parametro = solucion.indice[parametro]
+                    elemento.append(elemento_solucion[indice_parametro])
+                except KeyError:
+                    raise ValueError("El parametro no esta en el indice")
+            self.proposicion.delete_elemento(elemento)
+
 class ConsecuenciaWait(Consecuencia):
-    pass   
+    pass  
+
+class ConsecuenciaFuncion(Consecuencia):
+    def __init__(self,proposicion,parametros,funcion):
+        self.proposicion= proposicion
+        self.parametros = parametros
+        self.funcion = funcion
+    def ejecutar(self,solucion):
+        elemento = []
+        for elemento_solucion in solucion.conjunto:
+            for parametro in self.parametros:
+                try:
+                    indice_parametro = solucion.indice[parametro]
+                    elemento.append(elemento_solucion[indice_parametro])
+                except KeyError:
+                    raise ValueError("El parametro no esta en el indice")
+            self.proposicion.delete_elemento(elemento)
+            elemento = self.funcion(elemento)
+            self.proposicion.add_elemento(elemento)
+
+    pass
 
 
 #El tipo inclemento y decremento se hara despues de plantear el tipo single o unique.  
@@ -303,11 +411,11 @@ class Proposicion:
     def add_elemento(self, elemento):
         if not isinstance(elemento, (list, tuple)):
             raise TypeError("El parámetro 'elemento' debe ser una lista o una tupla")
-        self.elementos.add(elemento)
+        self.elementos.add(tuple(elemento))
     def delete_elemento(self, elemento):
         if not isinstance(elemento, (list, tuple)):
             raise TypeError("El parámetro 'elemento' debe ser una lista o una tupla")
-        self.elementos.remove(elemento)
+        self.elementos.remove(tuple(elemento))
     
     def comprobar(self, solucion_inicial,parametros):
         #Quitar el tipo de dado de SolucionParcial y usar un diccionario????
@@ -426,6 +534,92 @@ class Proposicion:
 if __name__ == "__main__":
 
     brain = Brain()
-    brain.add_categoria("pokemon",["vida","energia"])#incluir tipos como int o individuo?crear proposicion tipo pokemon_vida(pokemon,vida)???
-    brain.add_categoria("pikachu", padre="pokemon")#añadir valores por defecto?
-    brain.add_individuo("pikachu_1",brain.get_categoria("pikachu"),{"vida":100,"energia":"rayo"})
+
+    brain.add_categoria("jugador")
+    brain.add_individuo(Individuo("judador1"),"jugador")
+    brain.add_individuo(Individuo("judador2"),"jugador")
+
+    brain.add_categoria("pokemon",atributos=["vida"])
+    brain.add_categoria("pikachu", padre="pokemon")
+    brain.add_categoria("eevee", padre="pokemon")
+    brain.add_categoria("ratata", padre="pokemon")
+    brain.add_categoria("piggy", padre="pokemon")
+
+    
+    #categoria_pikachu = brain.get_categoria("pikachu")
+    #categoria_eevee = brain.get_categoria("eevee")
+    #categoria_ratata = brain.get_categoria("ratata")
+    #categoria_piggy = brain.get_categoria("piggy")
+    
+
+    brain.add_individuo(Individuo("pikachu_1"),"pikachu",{"vida":IndividuoNumerico(10)})
+    brain.add_individuo(Individuo("eevee_1"),"eevee",{"vida":IndividuoNumerico(10)})
+    brain.add_individuo(Individuo("ratata_1"),"ratata",{"vida":IndividuoNumerico(10)})
+    brain.add_individuo(Individuo("piggy_1"),"piggy",{"vida":IndividuoNumerico(10)})
+
+    brain.add_proposicion("pokemon_activo")
+    brain.add_proposicion("pokemon_banco")
+    brain.add_proposicion("jugador_rival")
+    brain.add_proposicion("turno_actual")
+
+    
+    accion_atacar = Accion("atacar",
+                           [Condicion(brain.get_proposicion("pokemon"),[Variable("Pokemon")]),
+                            Condicion(brain.get_proposicion("turno_actual"),[Variable("JugadorTurno")]),
+                            Condicion(brain.get_proposicion("pokemon_activo"),[Variable("Pokemon"),Variable("JugadorTurno")]),
+                            Condicion(brain.get_proposicion("jugador_rival"),[Variable("JugadorTurno"),Variable("Rival")]),
+                            Condicion(brain.get_proposicion("pokemon"), 
+                            [Variable("PokemonRival")]),
+                            Condicion(brain.get_proposicion("pokemon_activo"),
+                            [Variable("PokemonRival"),Variable("Rival")])
+                            ],                           
+                           [ConsecuenciaEliminacion(brain.get_proposicion("turno_actual"),[Variable("JugadorTurno")]),
+                            ConsecuenciaAsignacion(brain.get_proposicion("turno_actual"),[Variable("Rival")])])
+    def bajar_vida(elemento,parametro_posicion,damage):
+        if not isinstance(elemento[parametro_posicion],IndividuoNumerico):
+            raise TypeError("Solo se puede modificar Individuos Numericos")
+        elemento[parametro_posicion] = IndividuoNumerico(elemento[parametro_posicion].valor - damage)
+        return elemento
+
+    contingencia = Contingencia("pokemon_muerto",
+                                [Condicion(brain.get_proposicion("pokemon_vida"),   [Variable("PokemonRival"),Variable("VidaPokemonRival")]),
+                                CondicionFuncion(lambda x: x.valor <=0,(Variable("VidaPokemonRival"),))],
+                                [ConsecuenciaEliminacion(brain.get_proposicion("pokemon_activo"),[Variable("PokemonRival"),Variable("Rival")])])
+
+    accion= Accion("impactrueno",
+                                [Condicion(brain.get_proposicion("pikachu"),[Variable("Pokemon")]),
+                                 Condicion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")])],
+                                [ConsecuenciaFuncion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")],funcion= lambda elemento: bajar_vida(elemento,1,50))],
+                                padre=accion_atacar)
+    accion.add_contingencia(contingencia)
+    #brain.add_accion(accion_atacar)#solo para pruebas, atacar no es una accion ejecutable
+    brain.add_accion(accion)
+
+    accion= Accion("placaje",
+                                [Condicion(brain.get_proposicion("eevee"),[Variable("Pokemon")]),
+                                 Condicion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")])],
+                                [ConsecuenciaFuncion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")],funcion= lambda elemento: bajar_vida(elemento,1,20))],
+                                padre=accion_atacar)
+    accion.add_contingencia(contingencia)
+
+    brain.add_accion(accion)
+    brain.get_proposicion("turno_actual").add_elemento(("jugador1",))
+    #Falta el resto de proposiciones iniciales para poder ejecutar la accion atacar
+    brain.get_proposicion("pokemon_activo").add_elemento(("pikachu_1","jugador1"))
+
+    brain.get_proposicion("pokemon_activo").add_elemento(("eevee_1","jugador2"))
+    brain.get_proposicion("jugador_rival").add_elemento(("jugador1","jugador2"))
+    brain.get_proposicion("jugador_rival").add_elemento(("jugador2","jugador1"))
+
+    #Luego hay que añadir el resto de acciones y ataques que deben de heredar de atacar
+
+
+    acciones = brain.acciones_disponibles()
+    accion,argumentos = acciones[0]
+    accion.ejecutar(argumentos)
+    print("fin")
+    #accion = brain.acciones_disponibles()
+
+
+
+    #Falta añadir la accion cambiar pokemon activo

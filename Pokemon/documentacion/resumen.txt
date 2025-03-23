@@ -86,4 +86,8 @@ Las contingencias tambien puede definir un comportamiento despues de haber termi
 
 //Se podrian crear tambien los tipos de excepcion, donde se podria ejecutar la accion pero bajo otras condiciones. Seria el equivalente a un OR de las condiciones de la accion.
 
-//Otro tipo seria el tipo podria ser la extencion? que impondria una condicion del tipo Si X entonces tambien Y. Es decir que si cumple la primera condicion de la excepcion entonces para ejecutar la accion tambien debe de cumplir la segunda condicion.
+//Podria tambien haber una excepcion override, que si se cumple la condicion de la excepcion, en vez de ejecutar las consecuencias de la accion, ejecute otras definidas en el override. Seria equivalente a un not (condiciones) de la accion, para que no se pueda ejecutar y una nueva accion con las nuevas condiciones y consecuencias. 
+
+//Otro tipo seria el tipo podria ser la excepcion? que impondria una condicion del tipo Si X entonces tambien Y. Es decir que si cumple la primera condicion de la excepcion entonces para ejecutar la accion tambien debe de cumplir la segunda condicion. No es exactamente igual que una contingencia????
+
+En la practica seria mejor una accion que valide sus condiciones(puediendo ser verdad o falso) y luego segun si tienen excepciones, contingencias u excepciones. haga lo que tenga que hacer
