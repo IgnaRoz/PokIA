@@ -603,6 +603,22 @@ if __name__ == "__main__":
     accion.add_contingencia(contingencia)
 
     brain.add_accion(accion)
+
+    accion= Accion("cambiar_pokemon",
+                   [Condicion(brain.get_proposicion("pokemon"),[Variable("Pokemon")]),
+                    Condicion(brain.get_proposicion("turno_actual"),[Variable("Jugador")]),
+                    Condicion(brain.get_proposicion("pokemon_banco"),[Variable("Pokemon"),Variable("Jugador")])],
+                    [ConsecuenciaEliminacion(brain.get_proposicion("pokemon_banco"),[Variable("Pokemon"),Variable("Jugador")]),
+                     ConsecuenciaAsignacion(brain.get_proposicion("pokemon_activo"),[Variable("Pokemon"),Variable("Jugador")])])
+    
+    contingencia = Contingencia("cambiar_pokemon_activo",
+            [Condicion(brain.get_proposicion("pokemon_activo"),[Variable("PokemonActivo"),Variable("Jugador")])],
+            [ConsecuenciaEliminacion(brain.get_proposicion("pokemon_activo"),[Variable("PokemonActivo"),Variable("Jugador")]),
+            ConsecuenciaAsignacion(brain.get_proposicion("pokemon_banco"),[Variable("PokemonActivo"),Variable("Jugador")])])
+    accion.add_contingencia(contingencia)
+    brain.add_accion(accion)
+
+
     brain.get_proposicion("turno_actual").add_elemento(("jugador1",))
     #Falta el resto de proposiciones iniciales para poder ejecutar la accion atacar
     brain.get_proposicion("pokemon_activo").add_elemento(("pikachu_1","jugador1"))
@@ -610,7 +626,8 @@ if __name__ == "__main__":
     brain.get_proposicion("pokemon_activo").add_elemento(("eevee_1","jugador2"))
     brain.get_proposicion("jugador_rival").add_elemento(("jugador1","jugador2"))
     brain.get_proposicion("jugador_rival").add_elemento(("jugador2","jugador1"))
-
+    brain.get_proposicion("pokemon_banco").add_elemento(("piggy_1","jugador1"))
+    brain.get_proposicion("pokemon_banco").add_elemento(("ratata_1","jugador2"))
     #Luego hay que añadir el resto de acciones y ataques que deben de heredar de atacar
 
 
