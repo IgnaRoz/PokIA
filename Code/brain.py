@@ -295,6 +295,21 @@ class Accion:
         #comprobamos si hay alguna precondicion de contingencia
         for contingencia in self.contingencias:
             if not contingencia.postcondiciones:
+                #Comprobamos que se cumplen las condiciones de la contingencia
+                #Y guardamos la solucion en una copia temporalmente hasta comprobar si es valido
+                solucionContingencia = argmunetos.copy()
+                for condicion in contingencia.condiciones:
+                    if not isinstance(condicion, (Condicion, CondicionFuncion)):
+                        raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
+                    solucionContingencia = condicion.comprobar(solucionContingencia)
+                    if solucionContingencia.is_empty():
+                        #Si la solucion esta vacia significa que no hay elementos que cumplan las condiciones
+                        break
+                if solucionContingencia.is_empty():
+                    #Si al terminar la comprobacion de las condiciones de la contingencia no se ha econtrado solucion, entonces se pasa a la siguiente contingencia
+                    continue
+                argumentos=solucionContingencia #La solucion es valida y desechamos la antigua
+                    
                 if contingencia.postconsecuencias:
                     #Si es una postconsecuencia se añaden a las consecuencias para luego ejecutarlas
                     consecuencias.append(contingencia.consecuencias)
@@ -310,8 +325,25 @@ class Accion:
                 return self.consecuencias[indice:]
         for contingencia in self.contingencias:
             if contingencia.postcondiciones:
-              for consecuencia in contingencia.consecuencias:
-                        consecuencia.ejecutar(argumentos)  
+                #ESTA PARTE ES CASI IDENTICA A LA DE MAS ARRIBA, POSIBLE REFACTORIZACION
+                #Comprobamos que se cumplen las condiciones de la contingencia
+                #Y guardamos la solucion en una copia temporalmente hasta comprobar si es valido
+                solucionContingencia = argmunetos.copy()
+                for condicion in contingencia.condiciones:
+                    if not isinstance(condicion, (Condicion, CondicionFuncion)):
+                        raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
+                    solucionContingencia = condicion.comprobar(solucionContingencia)
+                    if solucionContingencia.is_empty():
+                        #Si la solucion esta vacia significa que no hay elementos que cumplan las condiciones
+                        break
+                if solucionContingencia.is_empty():
+                    #Si al terminar la comprobacion de las condiciones de la contingencia no se ha econtrado solucion, entonces se pasa a la siguiente contingencia
+                    continue
+                argumentos=solucionContingencia #La solucion es valida y desechamos la antigua
+                    
+                #Da igual si es posconsecuencia o preconsecuencias, ya que las postcondiciones se comprueban(y ejecutan) siempre al finalizar la ejecucion de las consecuencias de la accion
+                for consecuencia in contingencia.consecuencias:
+                    consecuencia.ejecutar(argumentos)
                 
         return []
 
@@ -632,7 +664,7 @@ if __name__ == "__main__":
 
 
     acciones = brain.acciones_disponibles()
-    accion,argumentos = acciones[0]
+    accion,argumentos = acciones[1]
     accion.ejecutar(argumentos)
     print("fin")
     #accion = brain.acciones_disponibles()
