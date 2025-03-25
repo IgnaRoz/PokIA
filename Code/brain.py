@@ -112,11 +112,15 @@ class Brain:
         for accion in self.acciones.values():
             solucion = accion.comprobar()
             if not solucion.is_empty():
-                print("Acción:", accion.nombre)
-                solucion.print()
+                #print(" Acción:", accion.nombre)
+                #solucion.print()
                 available_actions.append((accion, solucion.copy()))
         return available_actions
-
+    def mostrar_acciones(self,acciones):
+        n=1
+        for accion,_ in acciones:
+             print(n,") Acción:", accion.nombre)
+             n +=1
 class Categoria:
     def __init__(self, nombre, atributos=None, padre = None):
         self.nombre = nombre
@@ -194,10 +198,21 @@ class SolucionParcial:
             raise TypeError("El parámetro 'variable' debe ser del tipo Variable")
         if variable not in self.indice:
             self.indice[variable] = len(self.indice)
+    #crea varias soluciones pero cada una con un unico elemento distinto del conjunto de soluciones
+    def get_soluciones(self):
+        soluciones = []
+        elementos = list(self.conjunto)
+        for elemento in elementos:
+            solucion = self.copy()
+            solucion.conjunto.clear()
+            solucion.conjunto.append(elemento)
+            soluciones.append(solucion.copy())
+        return soluciones
+    
     def is_empty(self):
         return len(self.conjunto) == 0
     def copy(self):
-        return copy.copy(self)
+        return copy.deepcopy(self)
     def print(self):
         for elemento in self.conjunto:
             print("Elemento:")
@@ -239,21 +254,23 @@ class CondicionFuncion:
         return solucion_final
 
 class Contingencia:
-    def __init__(self,nombre,condiciones,consecuencias,postcondiciones=False,postconsecuencias=False):
+    def __init__(self,nombre,condiciones,consecuencias,postcondiciones=False,postconsecuencias=False, callBack = None):
         #en principio no tiene sentido teber postcondiciones si hay preconsecuencias, ya que para cuando se comprueben las codinciones ya se han ejecutado las consecuencias de la accion
         self.nombre = nombre
         self.condiciones = condiciones  
         self.consecuencias = consecuencias
         self.postcondiciones = postcondiciones
         self.postconsecuencias = postconsecuencias
+        self.callBack = callBack
 
 class Accion:
-    def __init__(self, nombre, condiciones,consecuencias,padre = None):
+    def __init__(self, nombre, condiciones,consecuencias,padre = None,callBack = None):
         self.nombre = nombre
         #habria que comprobar que todas las condiciones son del tipo Condicion o CondicionFuncion
         self.condiciones = condiciones
         self.consecuencias = consecuencias
         self.padre = padre
+        self.callBack = callBack
         self.contingencias = []
     def add_contingencia(self,contingencia):
         self.contingencias.append(contingencia)
@@ -285,11 +302,12 @@ class Accion:
                     return solucion
             solucion = condicion.comprobar(solucion)
         return solucion
-    def ejecutar(self,argmunetos):#deberia cambiar el nombre de argumentos a solucion?
+    def ejecutar(self,argumentos):#deberia cambiar el nombre de argumentos a solucion?
         #Falta implementar:
         #Ejecuta las consecuencias hasta que se queden sin consecuencias o se encuentre un wait
         #Deberia devolver las consecuencias que quedan por ejecutar si se encuentra un wait
-        
+        if self.callBack:
+            self.callBack()
         consecuencias = self.get_consecuencias()
 
         #comprobamos si hay alguna precondicion de contingencia
@@ -297,7 +315,7 @@ class Accion:
             if not contingencia.postcondiciones:
                 #Comprobamos que se cumplen las condiciones de la contingencia
                 #Y guardamos la solucion en una copia temporalmente hasta comprobar si es valido
-                solucionContingencia = argmunetos.copy()
+                solucionContingencia = argumentos.copy()
                 for condicion in contingencia.condiciones:
                     if not isinstance(condicion, (Condicion, CondicionFuncion)):
                         raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
@@ -309,7 +327,8 @@ class Accion:
                     #Si al terminar la comprobacion de las condiciones de la contingencia no se ha econtrado solucion, entonces se pasa a la siguiente contingencia
                     continue
                 argumentos=solucionContingencia #La solucion es valida y desechamos la antigua
-                    
+                if contingencia.callBack:
+                    contingencia.callBack()
                 if contingencia.postconsecuencias:
                     #Si es una postconsecuencia se añaden a las consecuencias para luego ejecutarlas
                     consecuencias.append(contingencia.consecuencias)
@@ -320,7 +339,7 @@ class Accion:
         #otra forma posible de aplicar contingencias es definiendolos como un nuevo tipo de consecuencias que se añaden al final o 
         for indice, consecuencia in enumerate(consecuencias):
             if isinstance(consecuencia, (ConsecuenciaAsignacion,ConsecuenciaEliminacion,ConsecuenciaFuncion)):
-                consecuencia.ejecutar(argmunetos)
+                consecuencia.ejecutar(argumentos)
             elif isinstance(consecuencia, ConsecuenciaWait):
                 return self.consecuencias[indice:]
         for contingencia in self.contingencias:
@@ -328,7 +347,7 @@ class Accion:
                 #ESTA PARTE ES CASI IDENTICA A LA DE MAS ARRIBA, POSIBLE REFACTORIZACION
                 #Comprobamos que se cumplen las condiciones de la contingencia
                 #Y guardamos la solucion en una copia temporalmente hasta comprobar si es valido
-                solucionContingencia = argmunetos.copy()
+                solucionContingencia = argumentos.copy()
                 for condicion in contingencia.condiciones:
                     if not isinstance(condicion, (Condicion, CondicionFuncion)):
                         raise TypeError("Todos los elementos de 'condiciones' deben ser del tipo Condicion o CondicionFuncion")
@@ -340,14 +359,14 @@ class Accion:
                     #Si al terminar la comprobacion de las condiciones de la contingencia no se ha econtrado solucion, entonces se pasa a la siguiente contingencia
                     continue
                 argumentos=solucionContingencia #La solucion es valida y desechamos la antigua
-                    
+                contingencia.callBack()
                 #Da igual si es posconsecuencia o preconsecuencias, ya que las postcondiciones se comprueban(y ejecutan) siempre al finalizar la ejecucion de las consecuencias de la accion
                 for consecuencia in contingencia.consecuencias:
                     consecuencia.ejecutar(argumentos)
                 
         return []
 
-        
+
         
     #def get_consecuencias(self,argumentos):
 class Consecuencia:
@@ -562,113 +581,3 @@ class Proposicion:
         return solucion_final
                     
 
-
-if __name__ == "__main__":
-
-    brain = Brain()
-
-    brain.add_categoria("jugador")
-    brain.add_individuo(Individuo("judador1"),"jugador")
-    brain.add_individuo(Individuo("judador2"),"jugador")
-
-    brain.add_categoria("pokemon",atributos=["vida"])
-    brain.add_categoria("pikachu", padre="pokemon")
-    brain.add_categoria("eevee", padre="pokemon")
-    brain.add_categoria("ratata", padre="pokemon")
-    brain.add_categoria("piggy", padre="pokemon")
-
-    
-    #categoria_pikachu = brain.get_categoria("pikachu")
-    #categoria_eevee = brain.get_categoria("eevee")
-    #categoria_ratata = brain.get_categoria("ratata")
-    #categoria_piggy = brain.get_categoria("piggy")
-    
-
-    brain.add_individuo(Individuo("pikachu_1"),"pikachu",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("eevee_1"),"eevee",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("ratata_1"),"ratata",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("piggy_1"),"piggy",{"vida":IndividuoNumerico(10)})
-
-    brain.add_proposicion("pokemon_activo")
-    brain.add_proposicion("pokemon_banco")
-    brain.add_proposicion("jugador_rival")
-    brain.add_proposicion("turno_actual")
-
-    
-    accion_atacar = Accion("atacar",
-                           [Condicion(brain.get_proposicion("pokemon"),[Variable("Pokemon")]),
-                            Condicion(brain.get_proposicion("turno_actual"),[Variable("JugadorTurno")]),
-                            Condicion(brain.get_proposicion("pokemon_activo"),[Variable("Pokemon"),Variable("JugadorTurno")]),
-                            Condicion(brain.get_proposicion("jugador_rival"),[Variable("JugadorTurno"),Variable("Rival")]),
-                            Condicion(brain.get_proposicion("pokemon"), 
-                            [Variable("PokemonRival")]),
-                            Condicion(brain.get_proposicion("pokemon_activo"),
-                            [Variable("PokemonRival"),Variable("Rival")])
-                            ],                           
-                           [ConsecuenciaEliminacion(brain.get_proposicion("turno_actual"),[Variable("JugadorTurno")]),
-                            ConsecuenciaAsignacion(brain.get_proposicion("turno_actual"),[Variable("Rival")])])
-    def bajar_vida(elemento,parametro_posicion,damage):
-        if not isinstance(elemento[parametro_posicion],IndividuoNumerico):
-            raise TypeError("Solo se puede modificar Individuos Numericos")
-        elemento[parametro_posicion] = IndividuoNumerico(elemento[parametro_posicion].valor - damage)
-        return elemento
-
-    contingencia = Contingencia("pokemon_muerto",
-                                [Condicion(brain.get_proposicion("pokemon_vida"),   [Variable("PokemonRival"),Variable("VidaPokemonRival")]),
-                                CondicionFuncion(lambda x: x.valor <=0,(Variable("VidaPokemonRival"),))],
-                                [ConsecuenciaEliminacion(brain.get_proposicion("pokemon_activo"),[Variable("PokemonRival"),Variable("Rival")])])
-
-    accion= Accion("impactrueno",
-                                [Condicion(brain.get_proposicion("pikachu"),[Variable("Pokemon")]),
-                                 Condicion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")])],
-                                [ConsecuenciaFuncion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")],funcion= lambda elemento: bajar_vida(elemento,1,50))],
-                                padre=accion_atacar)
-    accion.add_contingencia(contingencia)
-    #brain.add_accion(accion_atacar)#solo para pruebas, atacar no es una accion ejecutable
-    brain.add_accion(accion)
-
-    accion= Accion("placaje",
-                                [Condicion(brain.get_proposicion("eevee"),[Variable("Pokemon")]),
-                                 Condicion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")])],
-                                [ConsecuenciaFuncion(brain.get_proposicion("pokemon_vida"),[Variable("PokemonRival"),Variable("VidaPokemonRival")],funcion= lambda elemento: bajar_vida(elemento,1,20))],
-                                padre=accion_atacar)
-    accion.add_contingencia(contingencia)
-
-    brain.add_accion(accion)
-
-    accion= Accion("cambiar_pokemon",
-                   [Condicion(brain.get_proposicion("pokemon"),[Variable("Pokemon")]),
-                    Condicion(brain.get_proposicion("turno_actual"),[Variable("Jugador")]),
-                    Condicion(brain.get_proposicion("pokemon_banco"),[Variable("Pokemon"),Variable("Jugador")])],
-                    [ConsecuenciaEliminacion(brain.get_proposicion("pokemon_banco"),[Variable("Pokemon"),Variable("Jugador")]),
-                     ConsecuenciaAsignacion(brain.get_proposicion("pokemon_activo"),[Variable("Pokemon"),Variable("Jugador")])])
-    
-    contingencia = Contingencia("cambiar_pokemon_activo",
-            [Condicion(brain.get_proposicion("pokemon_activo"),[Variable("PokemonActivo"),Variable("Jugador")])],
-            [ConsecuenciaEliminacion(brain.get_proposicion("pokemon_activo"),[Variable("PokemonActivo"),Variable("Jugador")]),
-            ConsecuenciaAsignacion(brain.get_proposicion("pokemon_banco"),[Variable("PokemonActivo"),Variable("Jugador")])])
-    accion.add_contingencia(contingencia)
-    brain.add_accion(accion)
-
-
-    brain.get_proposicion("turno_actual").add_elemento(("jugador1",))
-    #Falta el resto de proposiciones iniciales para poder ejecutar la accion atacar
-    brain.get_proposicion("pokemon_activo").add_elemento(("pikachu_1","jugador1"))
-
-    brain.get_proposicion("pokemon_activo").add_elemento(("eevee_1","jugador2"))
-    brain.get_proposicion("jugador_rival").add_elemento(("jugador1","jugador2"))
-    brain.get_proposicion("jugador_rival").add_elemento(("jugador2","jugador1"))
-    brain.get_proposicion("pokemon_banco").add_elemento(("piggy_1","jugador1"))
-    brain.get_proposicion("pokemon_banco").add_elemento(("ratata_1","jugador2"))
-    #Luego hay que añadir el resto de acciones y ataques que deben de heredar de atacar
-
-
-    acciones = brain.acciones_disponibles()
-    accion,argumentos = acciones[1]
-    accion.ejecutar(argumentos)
-    print("fin")
-    #accion = brain.acciones_disponibles()
-
-
-
-    #Falta añadir la accion cambiar pokemon activo
