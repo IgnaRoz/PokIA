@@ -19,6 +19,8 @@ accion BASE atacar(){
         turno_actual(r);
 };
 
+Las acciones BASE se llamaran ahora acciones Parcial, debido a que son acciones "incompletas" que no se pueden ejecutar y necesitan ser ampliadas mediante herencia
+
 WAIT
 Se ha añadido la palabra clave WAIT para indicar que se debe esperar a que se efectue una accion antes de continuar con las consecuencias actuales. Despues de elegir y efectuar las consecuencias de la accion elegida, se continua con las que estan despues de WAIT
 

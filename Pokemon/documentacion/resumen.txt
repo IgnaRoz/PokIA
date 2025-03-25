@@ -1,6 +1,6 @@
 1) Proposiciones simples
 
-[sinble]nombreProposicion([[single] [Tipo:]nombreIndividuo,...]);
+[single]nombreProposicion([[single] [Tipo:]nombreIndividuo,...]);
 
 
 Sirve para definir informaicion sobre un individuo. Ej: turno_actual(jugador1) indica que el jugador 1 es el que tiene el turno actualmente.

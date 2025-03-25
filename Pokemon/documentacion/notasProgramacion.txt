@@ -28,7 +28,7 @@ Algunas categorias especiales como int o boolean, podrian tener un tratamiento e
 
 
 
-LAS REFERENCIAS SERAN DE LAS PROPOSICIONES Y CATEGORIAS SERAN EN TIEMPO DE EJECUCION MEDIANTE EL NOMBRE DE LA PROPOSICION O CATEGORIA. Esto ahorrara trabajo en el compilador y permitira trabajar dinamicamente pero con el incomveniente de tener que buscar constantemente las referencias. Quizas se podria evitar guardando la referencia al objeto despues de la primera busqueda.
+LAS REFERENCIAS SERAN DE LAS PROPOSICIONES Y CATEGORIAS SERAN EN TIEMPO DE EJECUCION MEDIANTE EL NOMBRE DE LA PROPOSICION O CATEGORIA. Esto ahorrara trabajo en el compilador y permitira trabajar dinamicamente pero con el inconveniente de tener que buscar constantemente las referencias. Quizas se podria evitar guardando la referencia al objeto despues de la primera busqueda.
 
 
 3)Acciones

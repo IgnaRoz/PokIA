@@ -19,12 +19,12 @@ def inicializar(brain):
     #categoria_piggy = brain.get_categoria("piggy")
     
 
-    brain.add_individuo(Individuo("pikachu_1"),"pikachu",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("eevee_1"),"eevee",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("ratata_1"),"ratata",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("ratata_2"),"ratata",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("piggy_1"),"piggy",{"vida":IndividuoNumerico(10)})
-    brain.add_individuo(Individuo("piggy_2"),"piggy",{"vida":IndividuoNumerico(10)})
+    brain.add_individuo(Individuo("pikachu_1"),"pikachu",{"vida":IndividuoNumerico(100)})
+    brain.add_individuo(Individuo("eevee_1"),"eevee",{"vida":IndividuoNumerico(100)})
+    brain.add_individuo(Individuo("ratata_1"),"ratata",{"vida":IndividuoNumerico(100)})
+    brain.add_individuo(Individuo("ratata_2"),"ratata",{"vida":IndividuoNumerico(100)})
+    brain.add_individuo(Individuo("piggy_1"),"piggy",{"vida":IndividuoNumerico(100)})
+    brain.add_individuo(Individuo("piggy_2"),"piggy",{"vida":IndividuoNumerico(100)})
 
     brain.add_proposicion("pokemon_activo")
     brain.add_proposicion("pokemon_banco")
@@ -115,11 +115,10 @@ def inicializar(brain):
     brain.get_proposicion("pokemon_activo").add_elemento(("eevee_1","jugador2"))
     brain.get_proposicion("jugador_rival").add_elemento(("jugador1","jugador2"))
     brain.get_proposicion("jugador_rival").add_elemento(("jugador2","jugador1"))
-    #brain.get_proposicion("pokemon_banco").add_elemento(("piggy_1","jugador1"))
-    #brain.get_proposicion("pokemon_banco").add_elemento(("piggy_2","jugador1"))
-#
-    #brain.get_proposicion("pokemon_banco").add_elemento(("ratata_1","jugador2"))
-    #brain.get_proposicion("pokemon_banco").add_elemento(("ratata_2","jugador2"))
+    brain.get_proposicion("pokemon_banco").add_elemento(("piggy_1","jugador1"))
+    brain.get_proposicion("pokemon_banco").add_elemento(("piggy_2","jugador1"))
+    brain.get_proposicion("pokemon_banco").add_elemento(("ratata_1","jugador2"))
+    brain.get_proposicion("pokemon_banco").add_elemento(("ratata_2","jugador2"))
 
   
 def estado(brain):
