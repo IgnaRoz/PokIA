@@ -232,7 +232,7 @@ if __name__ == "__main__":
     inicializar(brain)
 
 
-    acciones = brain.acciones_disponibles()
+    
     fin = False
     print("Bienvenido al juego de Pokémon!")
     print("Escribe 'help' para ver los comandos disponibles.")
@@ -248,7 +248,7 @@ if __name__ == "__main__":
         # Dividimos la entrada en palabras para extraer el comando y sus argumentos.
         tokens = comando.split()
         cmd = tokens[0].lower()
-
+        acciones = brain.acciones_disponibles()
         if cmd == "acciones":
             acciones = brain.acciones_disponibles()
             brain.mostrar_acciones(acciones)        
