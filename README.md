@@ -5,7 +5,7 @@ Proyecto de un programa en Python para ejecutar sentencias lógicas inspirada en
 Este lenguaje está pensado para modelar la lógica de juegos simples, como puede ser el famoso juego de cartas de Pokémon, el cual se ha tomado de ejemplo para demostrar la versatilidad del lenguaje.
 
 El objetivo final será un programa capaz de procesar un archivo de texto plano con la lógica del juego y que sea capaz en tiempo de ejecución de mostrar las acciones que están disponibles en cada momento, así como registrar los efectos de estas y disparar eventos que indique al entorno de Python los sucesos que ha desatado las diferentes acciones.
-también se plantea un generador de espacios de estados para que diferentes algoritmos clásicos de inteligencia artificial pueda recorrerlos para encontrar estrategias de juego que permitan la elaboración de bots capaces de jugar al juego modelado.
+También se plantea un generador de espacios de estados para que diferentes algoritmos clásicos de inteligencia artificial pueda recorrerlos para encontrar estrategias de juego que permitan la elaboración de bots capaces de jugar al juego modelado.
 
 
 # Prueba de concepto
